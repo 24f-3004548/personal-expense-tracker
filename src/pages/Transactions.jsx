@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
-  getExpenses, getIncome, deleteExpense, deleteIncome, updateExpense,
+  getExpenses, getIncome, deleteExpense, updateExpense,
   DEFAULT_CATEGORIES, getCategoryMeta, formatCurrencyFull, formatDate, MONTH_NAMES
 } from '../lib/supabase'
 
@@ -214,7 +214,7 @@ export default function Transactions() {
                     {item.category}
                   </p>
                 </div>
-                <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--ink)' }}>
+                <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--red)' }}>
                   {item._type === 'income' ? '+' : '−'}{formatCurrencyFull(item.amount)}
                 </p>
                 {item._type === 'expense' && (

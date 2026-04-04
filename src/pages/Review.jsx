@@ -41,6 +41,20 @@ export default function Review() {
     else setMonth(m => m + 1)
   }
 
+  const latestCompareMonth = month === 0 ? 11 : month - 1
+  const latestCompareYear = month === 0 ? year - 1 : year
+
+  useEffect(() => {
+    const isBeyondLatest =
+      compareYear > latestCompareYear ||
+      (compareYear === latestCompareYear && compareMonth > latestCompareMonth)
+
+    if (isBeyondLatest) {
+      setCompareMonth(latestCompareMonth)
+      setCompareYear(latestCompareYear)
+    }
+  }, [month, year, compareMonth, compareYear, latestCompareMonth, latestCompareYear])
+
   const decrementCompare = () => {
     if (compareMonth === 0) {
       setCompareMonth(11)
@@ -51,25 +65,21 @@ export default function Review() {
   }
 
   const incrementCompare = () => {
-    const isAtCurrent = compareYear === year && compareMonth === month
-    if (isAtCurrent) return
+    const isAtLatest = compareYear === latestCompareYear && compareMonth === latestCompareMonth
+    if (isAtLatest) return
     if (compareMonth === 11) {
       const nextYear = compareYear + 1
-      if (nextYear > year) return
+      if (nextYear > latestCompareYear) return
       setCompareMonth(0)
       setCompareYear(nextYear)
       return
     }
-    if (compareYear === year && compareMonth + 1 > month) return
+    if (compareYear === latestCompareYear && compareMonth + 1 > latestCompareMonth) return
     setCompareMonth(m => m + 1)
   }
 
   const expenseDelta = prevData?.totalExpenses && data?.totalExpenses !== undefined
     ? ((data.totalExpenses - prevData.totalExpenses) / (prevData.totalExpenses || 1)) * 100
-    : null
-
-  const savingsDelta = prevData?.savings !== undefined && data?.savings !== undefined
-    ? data.savings - prevData.savings
     : null
 
   const largestExpense = data?.expenses?.length

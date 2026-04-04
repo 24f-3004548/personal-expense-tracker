@@ -65,8 +65,6 @@ export default function Dashboard() {
     ? ((currentTrend.expenses - prevTrend.expenses) / (prevTrend.expenses || 1)) * 100
     : null
 
-  const DONUT_COLORS = ['#0f0f0f', '#3a3a3a', '#6b6b6b', '#9a9a9a', '#c4c4c0', '#e2e2dc']
-
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null
     const { name, amount } = payload[0].payload
@@ -105,6 +103,12 @@ export default function Dashboard() {
 
   const savings = data?.savings ?? 0
   const savingsRate = data?.totalIncome ? Math.round((savings / data.totalIncome) * 100) : 0
+  const recentTransactions = [
+    ...(data?.expenses || []).map(e => ({ ...e, _type: 'expense' })),
+    ...(data?.income || []).map(i => ({ ...i, _type: 'income', category: 'Income', note: i.note || 'Income' })),
+  ]
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5)
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
@@ -278,7 +282,7 @@ export default function Dashboard() {
       )}
 
       {/* Recent transactions */}
-      {data?.recentExpenses?.length > 0 && (
+      {recentTransactions.length > 0 && (
         <div className="rounded-xl border animate-fade-up stagger-5"
           style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
           <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
@@ -286,28 +290,30 @@ export default function Dashboard() {
             <Link to="/expenses" className="text-xs" style={{ color: 'var(--ink-4)' }}>View all →</Link>
           </div>
           <div>
-            {data.recentExpenses.map((exp, i) => {
-              const meta = getCategoryMeta(exp.category)
+            {recentTransactions.map((item) => {
+              const meta = item._type === 'income'
+                ? { icon: '💰', color: 'var(--green)' }
+                : getCategoryMeta(item.category)
               return (
-                <div key={exp.id}
+                <div key={`${item._type}-${item.id}`}
                   className="flex items-center gap-3 px-4 py-3 border-b last:border-0"
                   style={{ borderColor: 'var(--border)' }}>
                   <div
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
-                    style={{ background: meta.color + '15' }}
+                    style={{ background: item._type === 'income' ? 'var(--green-light)' : meta.color + '15' }}
                   >
                     {meta.icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate" style={{ color: 'var(--ink)' }}>
-                      {exp.note || exp.category}
+                      {item.note || item.category}
                     </p>
                     <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
-                      {exp.category} · {formatDate(exp.date)}
+                      {item.category} · {formatDate(item.date)}
                     </p>
                   </div>
-                  <p className="text-sm font-mono font-medium shrink-0" style={{ color: 'var(--ink)' }}>
-                    −{formatCurrencyFull(exp.amount)}
+                  <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--red)' }}>
+                    {item._type === 'income' ? '+' : '−'}{formatCurrencyFull(item.amount)}
                   </p>
                 </div>
               )

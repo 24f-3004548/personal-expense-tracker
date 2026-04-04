@@ -98,11 +98,6 @@ export const addIncome = async (userId, income) => {
   return data
 }
 
-export const deleteIncome = async (id) => {
-  const { error } = await supabase.from('income').delete().eq('id', id)
-  if (error) throw error
-}
-
 // ─── Budget helpers ────────────────────────────────────────────
 export const getBudget = async (userId, month, year) => {
   const { data, error } = await supabase
@@ -162,7 +157,6 @@ export const getDashboardData = async (userId, month, year) => {
     savings,
     categoryBreakdown,
     budget,
-    recentExpenses: expenses.slice(0, 5),
   }
 }
 
