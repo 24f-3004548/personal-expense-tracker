@@ -1,0 +1,333 @@
+import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '../context/AuthContext'
+import {
+  getDashboardData, getMonthlyTrend, formatCurrency, formatCurrencyFull,
+  formatDate, getCategoryMeta, MONTH_NAMES, SHORT_MONTHS
+} from '../lib/supabase'
+import {
+  PieChart, Pie, Cell, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid
+} from 'recharts'
+import QuickAdd from '../components/expenses/QuickAdd'
+import AddIncomeModal from '../components/income/AddIncomeModal'
+
+const now = new Date()
+
+export default function Dashboard() {
+  const { user } = useAuth()
+  const [month, setMonth] = useState(now.getMonth())
+  const [year, setYear] = useState(now.getFullYear())
+  const [data, setData] = useState(null)
+  const [trend, setTrend] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showIncome, setShowIncome] = useState(false)
+  const isCurrentMonth = month === now.getMonth() && year === now.getFullYear()
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [dash, trendData] = await Promise.all([
+        getDashboardData(user.id, month, year),
+        getMonthlyTrend(user.id),
+      ])
+      setData(dash)
+      setTrend(trendData)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [user.id, month, year])
+
+  useEffect(() => { load() }, [load])
+
+  // Month navigation
+  const prevMonth = () => {
+    if (month === 0) { setMonth(11); setYear(y => y - 1) }
+    else setMonth(m => m - 1)
+  }
+  const nextMonth = () => {
+    if (month === 11) { setMonth(0); setYear(y => y + 1) }
+    else setMonth(m => m + 1)
+  }
+  const canGoNext = !(month === now.getMonth() && year === now.getFullYear())
+
+  // Compare to previous month in trend
+  const currentTrend = trend.find(t => t.month === month && t.year === year)
+  const prevTrend = (() => {
+    const pm = month === 0 ? 11 : month - 1
+    const py = month === 0 ? year - 1 : year
+    return trend.find(t => t.month === pm && t.year === py)
+  })()
+
+  const expenseDelta = prevTrend && currentTrend
+    ? ((currentTrend.expenses - prevTrend.expenses) / (prevTrend.expenses || 1)) * 100
+    : null
+
+  const DONUT_COLORS = ['#0f0f0f', '#3a3a3a', '#6b6b6b', '#9a9a9a', '#c4c4c0', '#e2e2dc']
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload?.length) return null
+    const { name, amount } = payload[0].payload
+    const meta = getCategoryMeta(name)
+    return (
+      <div className="px-3 py-2 rounded-lg shadow-sm border text-xs"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <span>{meta.icon} {name}</span>
+        <span className="ml-2 font-mono font-medium">{formatCurrencyFull(amount)}</span>
+      </div>
+    )
+  }
+
+  const BarTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null
+    return (
+      <div className="px-3 py-2 rounded-lg shadow-sm border text-xs"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <p className="mb-1" style={{ color: 'var(--ink-3)' }}>{label}</p>
+        {payload.map(p => (
+          <p key={p.name} style={{ color: p.name === 'expenses' ? 'var(--ink)' : 'var(--green)' }}>
+            {p.name === 'expenses' ? 'Spent' : 'Earned'}: {formatCurrency(p.value)}
+          </p>
+        ))}
+      </div>
+    )
+  }
+
+  if (loading && !data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-sm" style={{ color: 'var(--ink-4)' }}>Loading...</div>
+      </div>
+    )
+  }
+
+  const savings = data?.savings ?? 0
+  const savingsRate = data?.totalIncome ? Math.round((savings / data.totalIncome) * 100) : 0
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 animate-fade-up">
+        <div>
+          <div className="flex items-center gap-2">
+            <button onClick={prevMonth} className="w-6 h-6 flex items-center justify-center rounded transition-colors text-sm"
+              style={{ color: 'var(--ink-3)' }}>‹</button>
+            <h1 className="text-base font-medium" style={{ color: 'var(--ink)' }}>
+              {MONTH_NAMES[month]} {year !== now.getFullYear() ? year : ''}
+            </h1>
+            <button onClick={nextMonth} disabled={!canGoNext}
+              className="w-6 h-6 flex items-center justify-center rounded transition-colors text-sm"
+              style={{ color: canGoNext ? 'var(--ink-3)' : 'var(--border)' }}>›</button>
+          </div>
+          {expenseDelta !== null && (
+            <p className="text-xs mt-0.5" style={{ color: expenseDelta > 0 ? 'var(--red)' : 'var(--green)' }}>
+              {expenseDelta > 0 ? '↑' : '↓'} {Math.abs(expenseDelta).toFixed(0)}% vs last month
+            </p>
+          )}
+        </div>
+        <button
+          onClick={() => setShowIncome(true)}
+          className="px-3 py-1.5 text-xs rounded-lg border transition-all"
+          style={{ borderColor: 'var(--border)', color: 'var(--ink-2)', background: 'var(--surface)' }}
+        >
+          + Income
+        </button>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up stagger-1">
+        {[
+          { label: 'Spent', value: formatCurrency(data?.totalExpenses), sub: `of ${formatCurrency(data?.budget?.amount || 0)} budget`, color: 'var(--ink)', show: true },
+          { label: 'Earned', value: formatCurrency(data?.totalIncome), color: 'var(--green)', show: true },
+          { label: 'Saved', value: formatCurrency(Math.abs(savings)), sub: savings >= 0 ? `${savingsRate}% rate` : 'over budget', color: savings >= 0 ? 'var(--green)' : 'var(--red)', show: true },
+        ].map(stat => (
+          <div key={stat.label} className="rounded-xl border p-3 md:p-4"
+            style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+            <p className="text-xs mb-1.5" style={{ color: 'var(--ink-4)' }}>{stat.label}</p>
+            <p className="text-lg md:text-xl font-mono font-medium leading-none" style={{ color: stat.color }}>
+              {stat.value}
+            </p>
+            {stat.sub && <p className="text-xs mt-1" style={{ color: 'var(--ink-4)' }}>{stat.sub}</p>}
+          </div>
+        ))}
+      </div>
+
+      {/* Budget progress bar */}
+      {data?.budget?.amount > 0 && (
+        <div className="mb-6 animate-fade-up stagger-2">
+          <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+            <div className="flex justify-between items-baseline mb-2">
+              <span className="text-xs" style={{ color: 'var(--ink-4)' }}>Budget used</span>
+              <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>
+                {formatCurrencyFull(data.totalExpenses)} / {formatCurrencyFull(data.budget.amount)}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
+              {(() => {
+                const pct = Math.min((data.totalExpenses / data.budget.amount) * 100, 100)
+                return (
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${pct}%`,
+                      background: pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--amber)' : 'var(--ink)',
+                    }}
+                  />
+                )
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main content grid */}
+      <div className="grid md:grid-cols-5 gap-4 mb-6">
+        {/* Quick add */}
+        <div className="md:col-span-2 animate-fade-up stagger-2">
+          {isCurrentMonth && <QuickAdd onAdded={load} />}
+          {!isCurrentMonth && (
+            <div className="rounded-xl border p-4 h-full flex items-center justify-center"
+              style={{ borderColor: 'var(--border)' }}>
+              <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Viewing past month</p>
+            </div>
+          )}
+        </div>
+
+        {/* Donut chart */}
+        <div className="md:col-span-3 rounded-xl border p-4 animate-fade-up stagger-3"
+          style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+          <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Spending by category</p>
+          {data?.categoryBreakdown?.length > 0 ? (
+            <div className="flex items-center gap-4">
+              <div style={{ width: 140, height: 140 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={data.categoryBreakdown}
+                      dataKey="amount"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={42}
+                      outerRadius={60}
+                      strokeWidth={2}
+                      stroke="var(--surface)"
+                    >
+                      {data.categoryBreakdown.map((entry, i) => (
+                        <Cell key={entry.name} fill={getCategoryMeta(entry.name).color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-2 min-w-0">
+                {data.categoryBreakdown.slice(0, 5).map((cat, i) => {
+                  const meta = getCategoryMeta(cat.name)
+                  const pct = data.totalExpenses ? Math.round((cat.amount / data.totalExpenses) * 100) : 0
+                  return (
+                    <div key={cat.name} className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ background: meta.color }} />
+                      <span className="text-xs flex-1 truncate" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>
+                      <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>{pct}%</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32">
+              <p className="text-xs" style={{ color: 'var(--ink-4)' }}>No expenses yet</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 6-month trend bar chart */}
+      {trend.length > 0 && (
+        <div className="rounded-xl border p-4 mb-6 animate-fade-up stagger-4"
+          style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+          <div className="flex items-baseline justify-between mb-4">
+            <p className="text-xs" style={{ color: 'var(--ink-4)' }}>6-month overview</p>
+            <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
+              <span style={{ color: 'var(--ink)' }}>▪</span> Spent &nbsp;
+              <span style={{ color: 'var(--green)' }}>▪</span> Earned
+            </p>
+          </div>
+          <ResponsiveContainer width="100%" height={120}>
+            <BarChart data={trend.map(t => ({
+              name: SHORT_MONTHS[t.month],
+              expenses: t.expenses,
+              income: t.income,
+            }))} barGap={2} barSize={12}>
+              <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false}
+                tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }} />
+              <YAxis hide />
+              <Tooltip content={<BarTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
+              <Bar dataKey="expenses" fill="var(--ink)" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="income" fill="var(--green)" radius={[3, 3, 0, 0]} opacity={0.6} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Recent transactions */}
+      {data?.recentExpenses?.length > 0 && (
+        <div className="rounded-xl border animate-fade-up stagger-5"
+          style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+          <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+            <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Recent</p>
+          </div>
+          <div>
+            {data.recentExpenses.map((exp, i) => {
+              const meta = getCategoryMeta(exp.category)
+              return (
+                <div key={exp.id}
+                  className="flex items-center gap-3 px-4 py-3 border-b last:border-0"
+                  style={{ borderColor: 'var(--border)' }}>
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
+                    style={{ background: meta.color + '15' }}
+                  >
+                    {meta.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm truncate" style={{ color: 'var(--ink)' }}>
+                      {exp.note || exp.category}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
+                      {exp.category} · {formatDate(exp.date)}
+                    </p>
+                  </div>
+                  <p className="text-sm font-mono font-medium shrink-0" style={{ color: 'var(--ink)' }}>
+                    −{formatCurrencyFull(exp.amount)}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {data?.expenses?.length === 0 && (
+        <div className="text-center py-16 animate-fade-in">
+          <p className="text-2xl mb-2">₹</p>
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--ink-2)' }}>No expenses this month</p>
+          <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Add your first expense above to get started</p>
+        </div>
+      )}
+
+      {showIncome && (
+        <AddIncomeModal
+          onClose={() => setShowIncome(false)}
+          onAdded={load}
+          month={month}
+          year={year}
+        />
+      )}
+    </div>
+  )
+}
