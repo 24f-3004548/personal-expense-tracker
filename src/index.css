@@ -38,6 +38,13 @@ body {
   color: var(--ink);
   line-height: 1.5;
   margin: 0;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(15, 15, 15, 0.12);
+}
+
+#root {
+  min-height: 100vh;
 }
 
 .font-mono {
@@ -79,6 +86,19 @@ body {
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.2s; }
 .stagger-5 { animation-delay: 0.25s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-slide-in,
+  .stagger-1,
+  .stagger-2,
+  .stagger-3,
+  .stagger-4,
+  .stagger-5 {
+    animation: none;
+  }
+}
 
 /* Custom focus */
 *:focus-visible {

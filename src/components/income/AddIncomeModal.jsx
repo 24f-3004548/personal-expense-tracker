@@ -2,14 +2,23 @@ import { useState } from 'react'
 import { addIncome } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 
+function toLocalDateInputValue(value) {
+  const d = new Date(value)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function AddIncomeModal({ onClose, onAdded, month, year }) {
   const { user } = useAuth()
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const today = new Date()
   const defaultDate = new Date(year, month, Math.min(today.getDate(), new Date(year, month + 1, 0).getDate()))
-  const [date, setDate] = useState(defaultDate.toISOString().split('T')[0])
+  const [date, setDate] = useState(toLocalDateInputValue(defaultDate))
   const [loading, setLoading] = useState(false)
+  const shouldAutoFocus = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
 
   const submit = async () => {
     if (!amount || Number(amount) <= 0) return
@@ -50,7 +59,7 @@ export default function AddIncomeModal({ onClose, onAdded, month, year }) {
                 placeholder="0"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                autoFocus
+                autoFocus={shouldAutoFocus}
                 className="flex-1 bg-transparent outline-none text-sm font-mono font-medium"
                 style={{ color: 'var(--ink)' }}
               />
@@ -75,7 +84,7 @@ export default function AddIncomeModal({ onClose, onAdded, month, year }) {
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
+              max={toLocalDateInputValue(new Date())}
               className="w-full px-3 py-2.5 text-sm rounded-lg border outline-none"
               style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--ink)' }}
             />

@@ -121,7 +121,7 @@ export default function QuickAdd({ onAdded }) {
       </div>
 
       {/* Note + Date */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <input
           type="text"
           placeholder="Note (optional)"
@@ -140,7 +140,7 @@ export default function QuickAdd({ onAdded }) {
           value={date}
           onChange={e => setDate(e.target.value)}
           max={new Date().toISOString().split('T')[0]}
-          className="px-2 py-2 text-sm rounded-lg border outline-none"
+          className="w-full sm:w-auto px-2 py-2 text-sm rounded-lg border outline-none"
           style={{
             background: 'var(--surface-2)',
             borderColor: 'var(--border)',

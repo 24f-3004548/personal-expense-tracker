@@ -14,6 +14,7 @@ export default function Transactions() {
   const [expenses, setExpenses] = useState([])
   const [filter, setFilter] = useState('All')
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({})
 
@@ -42,11 +43,15 @@ export default function Transactions() {
   const handleDelete = async (item) => {
     const isIncome = item._type === 'income'
     if (!confirm(`Delete this ${isIncome ? 'income entry' : 'expense'}?`)) return
+    try {
+      if (isIncome) await deleteIncome(item.id)
+      else await deleteExpense(item.id)
 
-    if (isIncome) await deleteIncome(item.id)
-    else await deleteExpense(item.id)
-
-    setExpenses(prev => prev.filter(e => !(e.id === item.id && e._type === item._type)))
+      setExpenses(prev => prev.filter(e => !(e.id === item.id && e._type === item._type)))
+    } catch (e) {
+      console.error(e)
+      alert(`Couldn't delete ${isIncome ? 'income entry' : 'expense'}. Please try again.`)
+    }
   }
 
   const startEdit = (item) => {
@@ -60,29 +65,43 @@ export default function Transactions() {
   }
 
   const saveEdit = async (item) => {
+    const amount = Number(editForm.amount)
+    if (!amount || amount <= 0 || !editForm.date) {
+      alert('Enter a valid amount and date.')
+      return
+    }
+
     const isIncome = item._type === 'income'
     const payload = isIncome
       ? {
-          amount: Number(editForm.amount),
+          amount,
           note: editForm.note,
           date: editForm.date,
         }
       : {
-          amount: Number(editForm.amount),
+          amount,
           category: editForm.category,
           note: editForm.note,
           date: editForm.date,
         }
 
-    if (isIncome) await updateIncome(item.id, payload)
-    else await updateExpense(item.id, payload)
+    setSaving(true)
+    try {
+      if (isIncome) await updateIncome(item.id, payload)
+      else await updateExpense(item.id, payload)
 
-    setExpenses(prev => prev.map(e => (
-      e.id === item.id && e._type === item._type
-        ? { ...e, ...payload, category: isIncome ? 'Income' : payload.category }
-        : e
-    )))
-    setEditing(null)
+      setExpenses(prev => prev.map(e => (
+        e.id === item.id && e._type === item._type
+          ? { ...e, ...payload, category: isIncome ? 'Income' : payload.category }
+          : e
+      )))
+      setEditing(null)
+    } catch (e) {
+      console.error(e)
+      alert(`Couldn't save ${isIncome ? 'income entry' : 'expense'}. If this continues, run the latest Supabase schema policies.`)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const prevMonth = () => {
@@ -220,9 +239,10 @@ export default function Transactions() {
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <button onClick={() => saveEdit(item)} className="flex-1 py-2 text-xs font-medium rounded-lg"
+                    <button onClick={() => saveEdit(item)} disabled={saving}
+                      className="flex-1 py-2 text-xs font-medium rounded-lg"
                       style={{ background: 'var(--ink)', color: 'var(--surface)' }}>
-                      Save
+                      {saving ? 'Saving...' : 'Save'}
                     </button>
                     <button onClick={() => setEditing(null)} className="px-4 py-2 text-xs rounded-lg border"
                       style={{ borderColor: 'var(--border)', color: 'var(--ink-3)' }}>
@@ -252,14 +272,14 @@ export default function Transactions() {
                 <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--red)' }}>
                   {item._type === 'income' ? '+' : '−'}{formatCurrencyFull(item.amount)}
                 </p>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
                   <button onClick={() => startEdit(item)}
-                    className="w-6 h-6 flex items-center justify-center rounded text-xs"
+                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded text-xs"
                     style={{ color: 'var(--ink-4)' }} title="Edit">
                     ✎
                   </button>
                   <button onClick={() => handleDelete(item)}
-                    className="w-6 h-6 flex items-center justify-center rounded text-xs"
+                    className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded text-xs"
                     style={{ color: 'var(--red)' }} title="Delete">
                     ×
                   </button>

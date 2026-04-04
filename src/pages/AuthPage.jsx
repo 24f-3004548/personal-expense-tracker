@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn, signUp } = useAuth()
+  const shouldAutoFocus = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
 
   const handle = async (e) => {
     e.preventDefault()
@@ -136,7 +137,7 @@ export default function AuthPage() {
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                   required
-                  autoFocus={mode === 'login'}
+                  autoFocus={mode === 'login' && shouldAutoFocus}
                   className="w-full px-3 py-2.5 text-sm rounded-lg border outline-none transition-all"
                   style={{
                     background: 'var(--surface-2)',

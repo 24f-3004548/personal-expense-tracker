@@ -56,6 +56,9 @@ create policy "Users see own income"
 create policy "Users insert own income"
   on income for insert with check (auth.uid() = user_id);
 
+create policy "Users update own income"
+  on income for update using (auth.uid() = user_id);
+
 create policy "Users delete own income"
   on income for delete using (auth.uid() = user_id);
 

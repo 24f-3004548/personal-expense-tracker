@@ -75,7 +75,15 @@ export default function AppLayout({ children }) {
       </aside>
 
       {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 border-b" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 border-b"
+        style={{
+          background: 'var(--surface)',
+          borderColor: 'var(--border)',
+          paddingTop: 'env(safe-area-inset-top)',
+          height: 'calc(56px + env(safe-area-inset-top))',
+        }}
+      >
         <span className="text-base font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>spendly</span>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -94,7 +102,7 @@ export default function AppLayout({ children }) {
           onClick={() => setMobileOpen(false)}
         >
           <div
-            className="absolute top-[49px] left-0 right-0 border-b py-2 px-3"
+            className="absolute top-[calc(56px+env(safe-area-inset-top))] left-0 right-0 border-b py-2 px-3"
             style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
             onClick={e => e.stopPropagation()}
           >
@@ -129,7 +137,7 @@ export default function AppLayout({ children }) {
       )}
 
       {/* Main content */}
-      <main className="flex-1 min-w-0 pb-20 md:pb-0 pt-[49px] md:pt-0">
+      <main className="flex-1 min-w-0 pb-20 md:pb-0 pt-[calc(56px+env(safe-area-inset-top))] md:pt-0">
         {children}
       </main>
     </div>
