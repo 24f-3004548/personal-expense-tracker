@@ -1,4 +1,4 @@
-# kharcha ₹
+# spendly ₹
 > A minimal, fast expense tracker. No bloat. No AI. Just your money.
 
 ## Stack

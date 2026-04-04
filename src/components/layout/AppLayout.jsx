@@ -27,7 +27,7 @@ export default function AppLayout({ children }) {
         {/* Logo */}
         <div className="px-5 pt-6 pb-4">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>kharcha</span>
+            <span className="text-lg font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>spendly</span>
             <span className="font-mono text-xs" style={{ color: 'var(--ink-4)' }}>₹</span>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function AppLayout({ children }) {
 
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 border-b" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <span className="text-base font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>kharcha</span>
+        <span className="text-base font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>spendly</span>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="w-8 h-8 flex items-center justify-center rounded-lg"

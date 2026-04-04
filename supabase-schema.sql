@@ -1,5 +1,5 @@
 -- ─────────────────────────────────────────────────────────────
--- Kharcha — Supabase Schema
+-- Spendly — Supabase Schema
 -- Run this in your Supabase SQL Editor
 -- ─────────────────────────────────────────────────────────────
 

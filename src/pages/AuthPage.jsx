@@ -32,7 +32,7 @@ export default function AuthPage() {
         <div className="mb-10">
           <div className="flex items-baseline gap-2 mb-1">
             <span className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
-              kharcha
+              spendly
             </span>
             <span className="text-sm font-mono" style={{ color: 'var(--ink-4)' }}>₹</span>
           </div>
