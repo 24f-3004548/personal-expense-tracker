@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../lib/supabase'
 
 export default function AuthPage() {
   const [mode, setMode] = useState('login')
   const [sent, setSent] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -27,6 +30,56 @@ export default function AuthPage() {
     }
   }
 
+  const resend = async () => {
+    setResending(true)
+    try {
+      await supabase.auth.resend({ type: 'signup', email: form.email })
+      setResent(true)
+      setTimeout(() => setResent(false), 4000)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setResending(false)
+    }
+  }
+
+  if (sent) return (
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--surface)' }}>
+      <div className="w-full max-w-sm animate-fade-up">
+        <div className="mb-8">
+          <span className="text-3xl">✉️</span>
+        </div>
+        <h2 className="text-base font-medium mb-2" style={{ color: 'var(--ink)' }}>Check your email</h2>
+        <p className="text-sm mb-1" style={{ color: 'var(--ink-3)' }}>
+          We sent a confirmation link to <span style={{ color: 'var(--ink)' }}>{form.email}</span>.
+        </p>
+        <p className="text-sm mb-6" style={{ color: 'var(--ink-4)' }}>
+          Click it to activate your account, then come back and sign in.
+        </p>
+
+        {resent
+          ? <p className="text-xs mb-4 animate-fade-in" style={{ color: 'var(--green)' }}>✓ Email resent</p>
+          : <button
+              onClick={resend}
+              disabled={resending}
+              className="text-xs underline mb-4 block"
+              style={{ color: resending ? 'var(--ink-4)' : 'var(--ink-3)' }}
+            >
+              {resending ? 'Resending...' : "Didn't receive it? Resend"}
+            </button>
+        }
+
+        <button
+          onClick={() => { setSent(false); setMode('login') }}
+          className="text-sm underline"
+          style={{ color: 'var(--ink-3)' }}
+        >
+          Back to sign in
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--surface)' }}>
       <div className="w-full max-w-sm animate-fade-up">
@@ -43,29 +96,8 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {sent ? (
-          <div className="animate-fade-up rounded-lg border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-            <div className="text-xl mb-2" aria-hidden="true">✉️</div>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--ink)' }}>Check your email</h2>
-            <p className="text-sm" style={{ color: 'var(--ink-3)' }}>
-              We sent a confirmation link to {form.email}. Click it to activate your account.
-            </p>
-            <p className="text-xs mt-3" style={{ color: 'var(--ink-4)' }}>
-              Once confirmed, come back and sign in.
-            </p>
-            <button
-              type="button"
-              onClick={() => { setSent(false); setMode('login') }}
-              className="mt-4 text-sm underline"
-              style={{ color: 'var(--ink-3)' }}
-            >
-              Back to sign in
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Form */}
-            <form onSubmit={handle} className="space-y-3">
+        {/* Form */}
+        <form onSubmit={handle} className="space-y-3">
               {mode === 'signup' && (
                 <div className="animate-fade-up">
                   <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-3)' }}>Name</label>
@@ -138,21 +170,19 @@ export default function AuthPage() {
               >
                 {loading ? '...' : mode === 'login' ? 'Sign in' : 'Create account'}
               </button>
-            </form>
+        </form>
 
-            {/* Toggle */}
-            <p className="mt-6 text-xs text-center" style={{ color: 'var(--ink-4)' }}>
-              {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-              <button
-                onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
-                className="underline"
-                style={{ color: 'var(--ink-2)' }}
-              >
-                {mode === 'login' ? 'Sign up' : 'Sign in'}
-              </button>
-            </p>
-          </>
-        )}
+        {/* Toggle */}
+        <p className="mt-6 text-xs text-center" style={{ color: 'var(--ink-4)' }}>
+          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+          <button
+            onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError('') }}
+            className="underline"
+            style={{ color: 'var(--ink-2)' }}
+          >
+            {mode === 'login' ? 'Sign up' : 'Sign in'}
+          </button>
+        </p>
       </div>
     </div>
   )
