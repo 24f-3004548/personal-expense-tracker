@@ -150,9 +150,17 @@ export default function Dashboard() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up stagger-1">
         {[
-          { label: 'Spent', value: formatCurrency(data?.totalExpenses), sub: `of ${formatCurrency(data?.budget?.amount || 0)} budget`, color: 'var(--ink)', show: true },
+          {
+            label: 'Spent',
+            value: formatCurrency(data?.totalExpenses),
+            sub: (data?.budget?.amount || 0) > 0
+              ? `of ${formatCurrency(data?.budget?.amount)} budget.`
+              : 'No budget set.',
+            color: 'var(--ink)',
+            show: true,
+          },
           { label: 'Earned', value: formatCurrency(data?.totalIncome), color: 'var(--green)', show: true },
-          { label: 'Saved', value: formatCurrency(Math.abs(savings)), sub: savings >= 0 ? `${savingsRate}% rate` : 'over budget', color: savings >= 0 ? 'var(--green)' : 'var(--red)', show: true },
+          { label: 'Saved', value: formatCurrency(Math.abs(savings)), sub: savings >= 0 ? `${savingsRate}% saved of income,` : 'over budget,', color: savings >= 0 ? 'var(--green)' : 'var(--red)', show: true },
         ].map(stat => (
           <div key={stat.label} className="rounded-xl border p-3 md:p-4"
             style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
