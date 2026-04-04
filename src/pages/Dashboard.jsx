@@ -103,6 +103,10 @@ export default function Dashboard() {
 
   const savings = data?.savings ?? 0
   const savingsRate = data?.totalIncome ? Math.round((savings / data.totalIncome) * 100) : 0
+  const budgetAmount = data?.budget?.amount || 0
+  const totalExpenses = data?.totalExpenses || 0
+  const budgetPct = budgetAmount > 0 ? (totalExpenses / budgetAmount) * 100 : 0
+  const isOver = budgetPct > 100
   const recentTransactions = [
     ...(data?.expenses || []).map(e => ({ ...e, _type: 'expense' })),
     ...(data?.income || []).map(i => ({ ...i, _type: 'income', category: 'Income', note: i.note || 'Income' })),
@@ -154,13 +158,13 @@ export default function Dashboard() {
             label: 'Spent',
             value: formatCurrency(data?.totalExpenses),
             sub: (data?.budget?.amount || 0) > 0
-              ? `of ${formatCurrency(data?.budget?.amount)} budget.`
-              : 'No budget set.',
+              ? `of ${formatCurrency(data?.budget?.amount)} budget`
+              : 'No budget set',
             color: 'var(--ink)',
             show: true,
           },
           { label: 'Earned', value: formatCurrency(data?.totalIncome), color: 'var(--green)', show: true },
-          { label: 'Saved', value: formatCurrency(Math.abs(savings)), sub: savings >= 0 ? `${savingsRate}% saved of income,` : 'over budget,', color: savings >= 0 ? 'var(--green)' : 'var(--red)', show: true },
+          { label: 'Saved', value: formatCurrency(Math.abs(savings)), sub: savings >= 0 ? `${savingsRate}% saved of income` : 'over budget,', color: savings >= 0 ? 'var(--green)' : 'var(--red)', show: true },
         ].map(stat => (
           <div key={stat.label} className="rounded-xl border p-3 md:p-4"
             style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -174,18 +178,25 @@ export default function Dashboard() {
       </div>
 
       {/* Budget progress bar */}
-      {data?.budget?.amount > 0 && (
+      {budgetAmount > 0 && (
         <div className="mb-6 animate-fade-up stagger-2">
           <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-            <div className="flex justify-between items-baseline mb-2">
-              <span className="text-xs" style={{ color: 'var(--ink-4)' }}>Budget used</span>
-              <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>
-                {formatCurrencyFull(data.totalExpenses)} / {formatCurrencyFull(data.budget.amount)}
+            <div className="flex items-baseline justify-between gap-3 mb-2">
+              <div className="flex items-baseline gap-2 min-w-0">
+                <span className="text-xs shrink-0" style={{ color: 'var(--ink-4)' }}>Budget used</span>
+                <p className="text-xs truncate" style={{ color: 'var(--ink-4)' }}>
+                  {Math.round(budgetPct)}% used
+                  {isOver && <span style={{ color: 'var(--red)' }}> — budget exceeded</span>}
+                  {!isOver && budgetPct >= 80 && <span style={{ color: 'var(--amber)' }}> — close to limit</span>}
+                </p>
+              </div>
+              <span className="text-xs font-mono shrink-0" style={{ color: 'var(--ink-3)' }}>
+                {formatCurrencyFull(totalExpenses)} / {formatCurrencyFull(budgetAmount)}
               </span>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
               {(() => {
-                const pct = Math.min((data.totalExpenses / data.budget.amount) * 100, 100)
+                const pct = Math.min(budgetPct, 100)
                 return (
                   <div
                     className="h-full rounded-full transition-all duration-700"
