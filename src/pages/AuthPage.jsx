@@ -20,11 +20,21 @@ export default function AuthPage() {
       if (mode === 'login') {
         await signIn(form.email, form.password)
       } else {
-        await signUp(form.email, form.password, form.name)
+        const result = await signUp(form.email, form.password, form.name)
+        if (result?.user?.identities?.length === 0) {
+          setError('An account with this email already exists. Please sign in instead.')
+          return
+        }
         setSent(true)
       }
     } catch (err) {
-      setError(err.message)
+      if (err.message?.toLowerCase().includes('already registered') ||
+          err.message?.toLowerCase().includes('user already exists') ||
+          err.message?.toLowerCase().includes('email address is already')) {
+        setError('An account with this email already exists. Please sign in instead.')
+      } else {
+        setError(err.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -45,7 +55,8 @@ export default function AuthPage() {
 
   if (sent) return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--surface)' }}>
-      <div className="w-full max-w-sm animate-fade-up">
+      <div className="w-full max-w-sm animate-fade-up rounded-xl border p-8"
+        style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
         <div className="mb-8">
           <span className="text-3xl">✉️</span>
         </div>

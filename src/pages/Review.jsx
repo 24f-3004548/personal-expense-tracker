@@ -10,6 +10,8 @@ export default function Review() {
   const { user } = useAuth()
   const [month, setMonth] = useState(now.getMonth())
   const [year, setYear] = useState(now.getFullYear())
+  const [compareMonth, setCompareMonth] = useState(now.getMonth() === 0 ? 11 : now.getMonth() - 1)
+  const [compareYear, setCompareYear] = useState(now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear())
   const [data, setData] = useState(null)
   const [prevData, setPrevData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -17,19 +19,18 @@ export default function Review() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const pm = month === 0 ? 11 : month - 1
-      const py = month === 0 ? year - 1 : year
       const [curr, prev] = await Promise.all([
         getDashboardData(user.id, month, year),
-        getDashboardData(user.id, pm, py),
+        getDashboardData(user.id, compareMonth, compareYear),
       ])
       setData(curr)
       setPrevData(prev)
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
-  }, [user.id, month, year])
+  }, [user.id, month, year, compareMonth, compareYear])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load() }, [month, year])
+  useEffect(() => { load() }, [compareMonth, compareYear])
 
   const prevMonth = () => {
     if (month === 0) { setMonth(11); setYear(y => y - 1) }
@@ -38,6 +39,29 @@ export default function Review() {
   const nextMonth = () => {
     if (month === 11) { setMonth(0); setYear(y => y + 1) }
     else setMonth(m => m + 1)
+  }
+
+  const decrementCompare = () => {
+    if (compareMonth === 0) {
+      setCompareMonth(11)
+      setCompareYear(y => y - 1)
+      return
+    }
+    setCompareMonth(m => m - 1)
+  }
+
+  const incrementCompare = () => {
+    const isAtCurrent = compareYear === year && compareMonth === month
+    if (isAtCurrent) return
+    if (compareMonth === 11) {
+      const nextYear = compareYear + 1
+      if (nextYear > year) return
+      setCompareMonth(0)
+      setCompareYear(nextYear)
+      return
+    }
+    if (compareYear === year && compareMonth + 1 > month) return
+    setCompareMonth(m => m + 1)
   }
 
   const expenseDelta = prevData?.totalExpenses && data?.totalExpenses !== undefined
@@ -136,72 +160,86 @@ export default function Review() {
           {prevData && (
             <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-3"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-              <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>
-                vs {MONTH_NAMES[month === 0 ? 11 : month - 1]}
-              </p>
-              <div className="space-y-3">
-                {[
-                  {
-                    label: 'Spending',
-                    curr: data?.totalExpenses,
-                    prev: prevData?.totalExpenses,
-                    lowerBetter: true,
-                  },
-                  {
-                    label: 'Savings',
-                    curr: data?.savings,
-                    prev: prevData?.savings,
-                    lowerBetter: false,
-                  },
-                ].map(row => {
-                  const delta = row.prev ? ((row.curr - row.prev) / Math.abs(row.prev)) * 100 : null
-                  const isPositive = row.lowerBetter ? delta <= 0 : delta >= 0
-                  return (
-                    <div key={row.label} className="flex justify-between items-center">
-                      <span className="text-sm" style={{ color: 'var(--ink-3)' }}>{row.label}</span>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-sm font-mono" style={{ color: 'var(--ink)' }}>
-                          {formatCurrencyFull(row.curr)}
-                        </span>
-                        {delta !== null && (
-                          <span className="text-xs font-mono" style={{ color: isPositive ? 'var(--green)' : 'var(--red)' }}>
-                            {delta > 0 ? '+' : ''}{delta.toFixed(0)}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Compare to</p>
+                <button onClick={decrementCompare} style={{ color: 'var(--ink-3)' }}>‹</button>
+                <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{MONTH_NAMES[compareMonth]} {compareYear}</span>
+                <button onClick={incrementCompare} style={{ color: 'var(--ink-3)' }}>›</button>
               </div>
-
-              {/* Category comparison */}
-              {data?.categoryBreakdown?.length > 0 && (
-                <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Category shifts</p>
-                  {data.categoryBreakdown.slice(0, 4).map(cat => {
-                    const prevCat = prevData?.categoryBreakdown?.find(c => c.name === cat.name)
-                    const catDelta = prevCat ? cat.amount - prevCat.amount : null
-                    const meta = getCategoryMeta(cat.name)
-                    return (
-                      <div key={cat.name} className="flex items-center justify-between py-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">{meta.icon}</span>
-                          <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xs font-mono" style={{ color: 'var(--ink)' }}>
-                            {formatCurrencyFull(cat.amount)}
-                          </span>
-                          {catDelta !== null && (
-                            <span className="text-xs" style={{ color: catDelta > 0 ? 'var(--red)' : 'var(--green)' }}>
-                              {catDelta > 0 ? '+' : ''}{formatCurrencyFull(catDelta)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+              <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>
+                vs {MONTH_NAMES[compareMonth]}
+              </p>
+              {prevData?.totalExpenses === 0 && prevData?.totalIncome === 0 ? (
+                <div className="rounded-xl border p-4 mb-4" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+                  <p className="text-xs" style={{ color: 'var(--ink-4)' }}>No data for {MONTH_NAMES[compareMonth]} {compareYear}</p>
                 </div>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {[
+                      {
+                        label: 'Spending',
+                        curr: data?.totalExpenses,
+                        prev: prevData?.totalExpenses,
+                        lowerBetter: true,
+                      },
+                      {
+                        label: 'Savings',
+                        curr: data?.savings,
+                        prev: prevData?.savings,
+                        lowerBetter: false,
+                      },
+                    ].map(row => {
+                      const delta = row.prev ? ((row.curr - row.prev) / Math.abs(row.prev)) * 100 : null
+                      const isPositive = row.lowerBetter ? delta <= 0 : delta >= 0
+                      return (
+                        <div key={row.label} className="flex justify-between items-center">
+                          <span className="text-sm" style={{ color: 'var(--ink-3)' }}>{row.label}</span>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-mono" style={{ color: 'var(--ink)' }}>
+                              {formatCurrencyFull(row.curr)}
+                            </span>
+                            {delta !== null && (
+                              <span className="text-xs font-mono" style={{ color: isPositive ? 'var(--green)' : 'var(--red)' }}>
+                                {delta > 0 ? '+' : ''}{delta.toFixed(0)}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Category comparison */}
+                  {data?.categoryBreakdown?.length > 0 && (
+                    <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                      <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Category shifts</p>
+                      {data.categoryBreakdown.slice(0, 4).map(cat => {
+                        const prevCat = prevData?.categoryBreakdown?.find(c => c.name === cat.name)
+                        const catDelta = prevCat ? cat.amount - prevCat.amount : null
+                        const meta = getCategoryMeta(cat.name)
+                        return (
+                          <div key={cat.name} className="flex items-center justify-between py-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{meta.icon}</span>
+                              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-xs font-mono" style={{ color: 'var(--ink)' }}>
+                                {formatCurrencyFull(cat.amount)}
+                              </span>
+                              {catDelta !== null && (
+                                <span className="text-xs" style={{ color: catDelta > 0 ? 'var(--red)' : 'var(--green)' }}>
+                                  {catDelta > 0 ? '+' : ''}{formatCurrencyFull(catDelta)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

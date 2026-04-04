@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   getDashboardData, getMonthlyTrend, formatCurrency, formatCurrencyFull,
@@ -120,10 +121,13 @@ export default function Dashboard() {
               className="w-6 h-6 flex items-center justify-center rounded transition-colors text-sm"
               style={{ color: canGoNext ? 'var(--ink-3)' : 'var(--border)' }}>›</button>
           </div>
-          {expenseDelta !== null && (
+          {expenseDelta !== null && prevTrend?.expenses > 0 && (
             <p className="text-xs mt-0.5" style={{ color: expenseDelta > 0 ? 'var(--red)' : 'var(--green)' }}>
               {expenseDelta > 0 ? '↑' : '↓'} {Math.abs(expenseDelta).toFixed(0)}% vs last month
             </p>
+          )}
+          {prevTrend?.expenses === 0 && currentTrend?.expenses > 0 && (
+            <p className="text-xs mt-0.5" style={{ color: 'var(--ink-4)' }}>No data for last month</p>
           )}
         </div>
         <button
@@ -199,8 +203,8 @@ export default function Dashboard() {
           style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
           <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Spending by category</p>
           {data?.categoryBreakdown?.length > 0 ? (
-            <div className="flex items-center gap-4">
-              <div style={{ width: 140, height: 140 }}>
+            <div className="flex flex-col gap-3">
+              <div style={{ width: '100%', height: 180 }}>
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
@@ -209,8 +213,8 @@ export default function Dashboard() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={42}
-                      outerRadius={60}
+                      innerRadius={54}
+                      outerRadius={78}
                       strokeWidth={2}
                       stroke="var(--surface)"
                     >
@@ -222,7 +226,7 @@ export default function Dashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex-1 space-y-2 min-w-0">
+              <div className="space-y-2">
                 {data.categoryBreakdown.slice(0, 5).map((cat, i) => {
                   const meta = getCategoryMeta(cat.name)
                   const pct = data.totalExpenses ? Math.round((cat.amount / data.totalExpenses) * 100) : 0
@@ -277,8 +281,9 @@ export default function Dashboard() {
       {data?.recentExpenses?.length > 0 && (
         <div className="rounded-xl border animate-fade-up stagger-5"
           style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-          <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
             <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Recent</p>
+            <Link to="/expenses" className="text-xs" style={{ color: 'var(--ink-4)' }}>View all →</Link>
           </div>
           <div>
             {data.recentExpenses.map((exp, i) => {

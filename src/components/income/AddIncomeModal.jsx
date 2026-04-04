@@ -75,6 +75,7 @@ export default function AddIncomeModal({ onClose, onAdded, month, year }) {
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
               className="w-full px-3 py-2.5 text-sm rounded-lg border outline-none"
               style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--ink)' }}
             />

@@ -1,159 +1,121 @@
-# spendly ₹
-> A minimal, fast expense tracker. No bloat. No AI. Just your money.
+# spendly
 
-## Stack
-- **Frontend**: React 18 + Vite + Tailwind CSS
-- **Backend**: Supabase (Auth + PostgreSQL + RLS — zero server to maintain)
-- **Charts**: Recharts (donut + bar — see chart justification below)
-- **Fonts**: DM Sans + DM Mono
+Minimal expense tracking with clean UX, fast load times, and Supabase-backed auth/data.
 
----
+## Live App
 
-## Quick Start
+Production deployment: [https://spendly-indol.vercel.app](https://spendly-indol.vercel.app)
 
-### 1. Create a Supabase project
-Go to [supabase.com](https://supabase.com) → New project → note your **Project URL** and **anon public key**.
+## What It Does
 
-### 2. Run the schema
-In your Supabase dashboard → SQL Editor → paste and run `supabase-schema.sql`.  
-This creates the `expenses`, `income`, and `budgets` tables with Row Level Security enabled.
+- Email/password authentication with confirmation flow
+- Quick expense logging with category and date
+- Income logging and monthly savings overview
+- Budget tracking with usage progress
+- Dashboard insights with category donut and trend chart
+- Transactions view with grouped daily entries
+- Monthly review with custom comparison month
 
-### 3. Enable Email Auth
-Supabase dashboard → Authentication → Providers → Email → Enable.
+## Tech Stack
 
-### 4. Clone and configure
+- React 18
+- Vite 5
+- Tailwind CSS
+- Supabase (Auth + Postgres + RLS)
+- Recharts
+
+## Getting Started
+
+### 1. Clone and install
+
 ```bash
-git clone <your-repo>
+git clone <your-repo-url>
 cd expense-tracker
+npm install
+```
+
+### 2. Configure environment variables
+
+Create a `.env` file in the project root:
+
+```bash
 cp .env.example .env
 ```
 
-Edit `.env`:
-```
-VITE_SUPABASE_URL=https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGc...
+Set these values:
+
+```env
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-### 5. Install and run
+### 3. Create Supabase schema
+
+In Supabase SQL Editor, run the SQL from `supabase-schema.sql`.
+
+This creates:
+
+- `expenses`
+- `income`
+- `budgets`
+
+All with row-level security policies.
+
+### 4. Enable Email auth
+
+In Supabase dashboard:
+
+- Authentication
+- Providers
+- Enable `Email`
+
+### 5. Run locally
+
 ```bash
-npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173)
+Local app URL: [http://localhost:5173](http://localhost:5173)
 
----
+## Scripts
+
+```bash
+npm run dev      # Start local dev server
+npm run build    # Create production build
+npm run preview  # Preview production build locally
+```
 
 ## Project Structure
 
+```text
+src/
+	components/
+		expenses/
+		income/
+		layout/
+	context/
+	hooks/
+	lib/
+	pages/
 ```
-expense-tracker/
-├── src/
-│   ├── components/
-│   │   ├── expenses/
-│   │   │   └── QuickAdd.jsx        # Core UX — add expense in <5s
-│   │   ├── income/
-│   │   │   └── AddIncomeModal.jsx
-│   │   └── layout/
-│   │       └── AppLayout.jsx       # Sidebar + mobile nav
-│   ├── context/
-│   │   └── AuthContext.jsx         # Supabase auth state
-│   ├── lib/
-│   │   └── supabase.js             # DB helpers + formatting utils
-│   ├── pages/
-│   │   ├── AuthPage.jsx            # Login + signup
-│   │   ├── Dashboard.jsx           # Home — stats, charts, recent
-│   │   ├── Transactions.jsx        # Full list, filter, edit, delete
-│   │   ├── Budget.jsx              # Monthly budget + progress
-│   │   └── Review.jsx              # Monthly summary + comparisons
-│   ├── App.jsx
-│   ├── main.jsx
-│   └── index.css                   # Design tokens (CSS variables)
-├── supabase-schema.sql
-├── .env.example
-└── README.md
-```
-
----
-
-## Chart Justification — 3-member panel
-
-**End User (Priya, 27, pays rent + eats out a lot):**  
-*"I want to know where my money went without doing math."*  
-→ **Donut chart**: immediately answers "which category ate my budget" with visual proportions. Percentages scannable in 2 seconds. Colour-coded by category with a clean legend alongside — no clicking required.  
-→ **6-month bar chart**: answers "am I getting better?" — the one question that drives habit change. Paired income/expense bars create a savings gap that's viscerally motivating.
-
-**Investor (Series A lens, DAU/retention focus):**  
-*"What makes users come back daily, not monthly?"*  
-→ The donut creates a "beat my top category" loop — users return to watch Food or Transport shrink. The trend bars create a "beat last month" narrative — both are retention mechanics baked into the data visualisation itself. Recharts is lightweight (~45kb gzipped), keeping LCP fast, which matters for mobile-first markets like India where 4G is the norm.
-
-**Developer (maintaining this in 6 months):**  
-*"Can I extend this without touching charting internals?"*  
-→ Recharts is fully declarative, composable React components. Swapping a `<Bar>` for a `<Line>` is one word. Custom tooltips are plain JSX. No Canvas API, no D3 selection chains, no imperative lifecycle. Data flows straight from Supabase → state → Recharts props. Zero abstraction layers to debug.
-
-**What was ruled out and why:**
-- Line chart: implies continuity/trend — wrong mental model for categorical spending
-- Stacked bar: too much cognitive load for a glanceable dashboard
-- Treemap: impressive, wrong — requires deliberate study, not a 2-second read
-- Pie (without donut): donut's inner space is used for future total-amount display
-
----
-
-## Security
-
-- **Row Level Security (RLS)** on all tables — users can only read/write their own rows, enforced at the database level
-- **Supabase Auth** handles password hashing (bcrypt internally), session management, and token refresh
-- **HTTP-only cookies** used by Supabase Auth SDK by default for session persistence
-- **No sensitive data in localStorage** — all auth state managed by Supabase client
-- **Environment variables** prefixed with `VITE_` are build-time only — anon key is safe to expose (RLS protects data)
-
----
-
-## Adding your currency
-
-In `src/lib/supabase.js`, change the default currency symbol:
-
-```js
-export const formatCurrency = (amount, currency = '₹') => { ... }
-```
-
-Replace `₹` with `$`, `€`, `£`, etc.
-
----
 
 ## Deployment
 
-### Vercel (recommended)
-```bash
-npm run build
-# drag dist/ to vercel.com, or:
-npx vercel --prod
-```
-Set environment variables in Vercel dashboard (same as .env).
+### Vercel
 
-### Netlify
-```bash
-npm run build
-# drag dist/ to netlify drop, or connect repo
-```
+1. Import the repository in Vercel.
+2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Project Settings.
+3. Deploy.
 
----
+Build settings (default for Vite):
 
-## Design decisions
+- Build command: `npm run build`
+- Output directory: `dist`
 
-- **DM Sans + DM Mono**: humanist sans for readability, monospace for numbers (critical for financial data alignment). Not Inter. Not Space Grotesk.
-- **CSS variables for all colours**: theming in one place, consistent across every component
-- **Staggered animations**: `animation-delay` on each section creates a natural reveal without overwhelming the user
-- **`−` vs `-`**: proper minus sign (U+2212) used for expense amounts — a detail that signals craft
-- **`formatCurrency` shorthand**: ₹1,20,000 → ₹1.2L (Indian number system), keeps stats scannable
-- **Auto-focus on amount**: QuickAdd mounts with cursor in amount field — zero clicks to start logging
+Live deployment: [https://spendly-indol.vercel.app](https://spendly-indol.vercel.app)
 
----
+## Notes
 
-## Roadmap (not built, not bloat)
-
-- [ ] Recurring expense flag
-- [ ] Currency selection at signup
-- [ ] Export to CSV
-- [ ] Shared expenses (split with partner)
-- [ ] PWA / install to home screen
+- The anonymous Supabase key is safe for frontend usage when RLS is configured correctly.
+- Date inputs are limited to today or earlier to avoid future-dated entries.
+- Currency helpers use INR-style formatting by default and can be customized in `src/lib/supabase.js`.

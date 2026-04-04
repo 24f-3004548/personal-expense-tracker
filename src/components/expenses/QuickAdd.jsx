@@ -139,6 +139,7 @@ export default function QuickAdd({ onAdded }) {
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
+          max={new Date().toISOString().split('T')[0]}
           className="px-2 py-2 text-sm rounded-lg border outline-none"
           style={{
             background: 'var(--surface-2)',

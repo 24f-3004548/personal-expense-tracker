@@ -162,7 +162,7 @@ export const getDashboardData = async (userId, month, year) => {
     savings,
     categoryBreakdown,
     budget,
-    recentExpenses: expenses.slice(0, 8),
+    recentExpenses: expenses.slice(0, 5),
   }
 }
 
