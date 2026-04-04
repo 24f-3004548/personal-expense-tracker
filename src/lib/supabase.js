@@ -36,6 +36,7 @@ export const getExpenses = async (userId, month, year) => {
     .eq('user_id', userId)
     .gte('date', startDate)
     .lte('date', endDate)
+    .order('created_at', { ascending: false })
     .order('date', { ascending: false })
 
   if (error) throw error
@@ -81,6 +82,7 @@ export const getIncome = async (userId, month, year) => {
     .eq('user_id', userId)
     .gte('date', startDate)
     .lte('date', endDate)
+    .order('created_at', { ascending: false })
     .order('date', { ascending: false })
 
   if (error) throw error
@@ -210,6 +212,13 @@ export const formatDate = (dateStr) => {
   if (d.toDateString() === today.toDateString()) return 'Today'
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday'
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+}
+
+export const formatTime = (timestamp) => {
+  if (!timestamp) return ''
+  const d = new Date(timestamp)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })
 }
 
 export const MONTH_NAMES = [

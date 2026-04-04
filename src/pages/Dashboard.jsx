@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   getDashboardData, getMonthlyTrend, formatCurrency, formatCurrencyFull,
-  formatDate, getCategoryMeta, MONTH_NAMES, SHORT_MONTHS
+  formatDate, formatTime, getCategoryMeta, MONTH_NAMES, SHORT_MONTHS
 } from '../lib/supabase'
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
@@ -107,7 +107,11 @@ export default function Dashboard() {
     ...(data?.expenses || []).map(e => ({ ...e, _type: 'expense' })),
     ...(data?.income || []).map(i => ({ ...i, _type: 'income', category: 'Income', note: i.note || 'Income' })),
   ]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .sort((a, b) => {
+      const at = new Date(a.created_at || `${a.date}T00:00:00`).getTime()
+      const bt = new Date(b.created_at || `${b.date}T00:00:00`).getTime()
+      return bt - at
+    })
     .slice(0, 5)
 
   return (
@@ -309,7 +313,7 @@ export default function Dashboard() {
                       {item.note || item.category}
                     </p>
                     <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
-                      {item.category} · {formatDate(item.date)}
+                      {item.category} · {formatDate(item.date)} · {formatTime(item.created_at)}
                     </p>
                   </div>
                   <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--red)' }}>

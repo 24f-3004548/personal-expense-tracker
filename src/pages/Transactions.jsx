@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
   getExpenses, getIncome, deleteExpense, updateExpense,
-  DEFAULT_CATEGORIES, getCategoryMeta, formatCurrencyFull, formatDate, MONTH_NAMES
+  DEFAULT_CATEGORIES, getCategoryMeta, formatCurrencyFull, formatDate, formatTime, MONTH_NAMES
 } from '../lib/supabase'
 
 const now = new Date()
@@ -27,7 +27,11 @@ export default function Transactions() {
       const combined = [
         ...expData.map(e => ({ ...e, _type: 'expense' })),
         ...incData.map(i => ({ ...i, _type: 'income', category: 'Income', note: i.note || 'Income' })),
-      ].sort((a, b) => new Date(b.date) - new Date(a.date))
+      ].sort((a, b) => {
+        const at = new Date(a.created_at || `${a.date}T00:00:00`).getTime()
+        const bt = new Date(b.created_at || `${b.date}T00:00:00`).getTime()
+        return bt - at
+      })
       setExpenses(combined)
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
@@ -211,7 +215,7 @@ export default function Transactions() {
                     {item.note || item.category}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
-                    {item.category}
+                    {item.category} · {formatTime(item.created_at)}
                   </p>
                 </div>
                 <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--red)' }}>
