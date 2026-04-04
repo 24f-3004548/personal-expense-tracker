@@ -4,7 +4,7 @@ Minimal expense tracking with clean UX, fast load times, and Supabase-backed aut
 
 ## Live App
 
-Production deployment: [https://spendly-indol.vercel.app](https://spendly-indol.vercel.app)
+Production deployment: [https://spendly-expensetracker.vercel.app](https://spendly-expensetracker.vercel.app)
 
 ## What It Does
 
