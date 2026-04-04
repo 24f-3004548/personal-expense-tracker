@@ -183,9 +183,9 @@ export default function Dashboard() {
           <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
             <div className="flex items-baseline justify-between gap-3 mb-2">
               <div className="flex items-baseline gap-2 min-w-0">
-                <span className="text-xs shrink-0" style={{ color: 'var(--ink-4)' }}>Budget used</span>
+                <span className="text-xs shrink-0" style={{ color: 'var(--ink-4)' }}>Budget used:</span>
                 <p className="text-xs truncate" style={{ color: 'var(--ink-4)' }}>
-                  {Math.round(budgetPct)}% used
+                  {Math.round(budgetPct)}% 
                   {isOver && <span style={{ color: 'var(--red)' }}> — budget exceeded</span>}
                   {!isOver && budgetPct >= 80 && <span style={{ color: 'var(--amber)' }}> — close to limit</span>}
                 </p>
@@ -202,7 +202,7 @@ export default function Dashboard() {
                     className="h-full rounded-full transition-all duration-700"
                     style={{
                       width: `${pct}%`,
-                      background: pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--amber)' : 'var(--ink)',
+                      background: pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--amber)' : 'var(--green)',
                     }}
                   />
                 )
