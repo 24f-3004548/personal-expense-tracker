@@ -100,6 +100,23 @@ export const addIncome = async (userId, income) => {
   return data
 }
 
+export const updateIncome = async (id, updates) => {
+  const { data, error } = await supabase
+    .from('income')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export const deleteIncome = async (id) => {
+  const { error } = await supabase.from('income').delete().eq('id', id)
+  if (error) throw error
+}
+
 // ─── Budget helpers ────────────────────────────────────────────
 export const getBudget = async (userId, month, year) => {
   const { data, error } = await supabase

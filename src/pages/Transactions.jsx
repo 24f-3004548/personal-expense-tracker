@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
-  getExpenses, getIncome, deleteExpense, updateExpense,
+  getExpenses, getIncome, deleteExpense, updateExpense, deleteIncome, updateIncome,
   DEFAULT_CATEGORIES, getCategoryMeta, formatCurrencyFull, formatDate, formatTime, MONTH_NAMES
 } from '../lib/supabase'
 
@@ -39,20 +39,49 @@ export default function Transactions() {
 
   useEffect(() => { load() }, [load])
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this expense?')) return
-    await deleteExpense(id)
-    setExpenses(prev => prev.filter(e => e.id !== id))
+  const handleDelete = async (item) => {
+    const isIncome = item._type === 'income'
+    if (!confirm(`Delete this ${isIncome ? 'income entry' : 'expense'}?`)) return
+
+    if (isIncome) await deleteIncome(item.id)
+    else await deleteExpense(item.id)
+
+    setExpenses(prev => prev.filter(e => !(e.id === item.id && e._type === item._type)))
   }
 
-  const startEdit = (exp) => {
-    setEditing(exp.id)
-    setEditForm({ amount: exp.amount, category: exp.category, note: exp.note || '', date: exp.date })
+  const startEdit = (item) => {
+    setEditing(`${item._type}-${item.id}`)
+    setEditForm({
+      amount: item.amount,
+      category: item.category,
+      note: item.note || '',
+      date: item.date,
+    })
   }
 
-  const saveEdit = async () => {
-    await updateExpense(editing, editForm)
-    setExpenses(prev => prev.map(e => e.id === editing ? { ...e, ...editForm } : e))
+  const saveEdit = async (item) => {
+    const isIncome = item._type === 'income'
+    const payload = isIncome
+      ? {
+          amount: Number(editForm.amount),
+          note: editForm.note,
+          date: editForm.date,
+        }
+      : {
+          amount: Number(editForm.amount),
+          category: editForm.category,
+          note: editForm.note,
+          date: editForm.date,
+        }
+
+    if (isIncome) await updateIncome(item.id, payload)
+    else await updateExpense(item.id, payload)
+
+    setExpenses(prev => prev.map(e => (
+      e.id === item.id && e._type === item._type
+        ? { ...e, ...payload, category: isIncome ? 'Income' : payload.category }
+        : e
+    )))
     setEditing(null)
   }
 
@@ -131,11 +160,11 @@ export default function Transactions() {
             const meta = item._type === 'income'
               ? { icon: '💰', color: 'var(--green)' }
               : getCategoryMeta(item.category)
-            const isEdit = item._type === 'expense' && editing === item.id
+            const isEdit = editing === `${item._type}-${item.id}`
 
             if (isEdit) {
               return (
-                <div key={`expense-${item.id}`} className="p-4 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
+                <div key={`${item._type}-${item.id}`} className="p-4 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     <div>
                       <label className="text-xs block mb-1" style={{ color: 'var(--ink-4)' }}>Amount</label>
@@ -169,27 +198,29 @@ export default function Transactions() {
                       style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--ink)' }}
                     />
                   </div>
-                  <div className="mb-3">
-                    <label className="text-xs block mb-1" style={{ color: 'var(--ink-4)' }}>Category</label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {DEFAULT_CATEGORIES.map(cat => (
-                        <button
-                          key={cat.name}
-                          onClick={() => setEditForm(f => ({ ...f, category: cat.name }))}
-                          className="px-2 py-1 text-xs rounded-lg border transition-all"
-                          style={{
-                            background: editForm.category === cat.name ? cat.color + '18' : 'var(--surface)',
-                            color: editForm.category === cat.name ? cat.color : 'var(--ink-4)',
-                            borderColor: editForm.category === cat.name ? cat.color + '40' : 'var(--border)',
-                          }}
-                        >
-                          {cat.icon} {cat.name}
-                        </button>
-                      ))}
+                  {item._type === 'expense' && (
+                    <div className="mb-3">
+                      <label className="text-xs block mb-1" style={{ color: 'var(--ink-4)' }}>Category</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DEFAULT_CATEGORIES.map(cat => (
+                          <button
+                            key={cat.name}
+                            onClick={() => setEditForm(f => ({ ...f, category: cat.name }))}
+                            className="px-2 py-1 text-xs rounded-lg border transition-all"
+                            style={{
+                              background: editForm.category === cat.name ? cat.color + '18' : 'var(--surface)',
+                              color: editForm.category === cat.name ? cat.color : 'var(--ink-4)',
+                              borderColor: editForm.category === cat.name ? cat.color + '40' : 'var(--border)',
+                            }}
+                          >
+                            {cat.icon} {cat.name}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex gap-2">
-                    <button onClick={saveEdit} className="flex-1 py-2 text-xs font-medium rounded-lg"
+                    <button onClick={() => saveEdit(item)} className="flex-1 py-2 text-xs font-medium rounded-lg"
                       style={{ background: 'var(--ink)', color: 'var(--surface)' }}>
                       Save
                     </button>
@@ -221,20 +252,18 @@ export default function Transactions() {
                 <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--red)' }}>
                   {item._type === 'income' ? '+' : '−'}{formatCurrencyFull(item.amount)}
                 </p>
-                {item._type === 'expense' && (
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <button onClick={() => startEdit(item)}
-                      className="w-6 h-6 flex items-center justify-center rounded text-xs"
-                      style={{ color: 'var(--ink-4)' }} title="Edit">
-                      ✎
-                    </button>
-                    <button onClick={() => handleDelete(item.id)}
-                      className="w-6 h-6 flex items-center justify-center rounded text-xs"
-                      style={{ color: 'var(--red)' }} title="Delete">
-                      ×
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <button onClick={() => startEdit(item)}
+                    className="w-6 h-6 flex items-center justify-center rounded text-xs"
+                    style={{ color: 'var(--ink-4)' }} title="Edit">
+                    ✎
+                  </button>
+                  <button onClick={() => handleDelete(item)}
+                    className="w-6 h-6 flex items-center justify-center rounded text-xs"
+                    style={{ color: 'var(--red)' }} title="Delete">
+                    ×
+                  </button>
+                </div>
               </div>
             )
           })}
