@@ -13,6 +13,7 @@ import QuickAdd from '../components/expenses/QuickAdd'
 import AddIncomeModal from '../components/income/AddIncomeModal'
 
 const now = new Date()
+const DONUT_COLORS = ['#0f0f0f', '#3a3a3a', '#6b6b6b', '#9a9a9a', '#c4c4c0', '#e2e2dc']
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -107,9 +108,6 @@ export default function Dashboard() {
   const totalExpenses = data?.totalExpenses || 0
   const budgetPct = budgetAmount > 0 ? (totalExpenses / budgetAmount) * 100 : 0
   const isOver = budgetPct > 100
-  const topCategory = data?.categoryBreakdown?.length
-    ? data.categoryBreakdown.reduce((max, category) => (Number(category.amount) > Number(max.amount) ? category : max), data.categoryBreakdown[0])
-    : null
   const recentTransactions = [
     ...(data?.expenses || []).map(e => ({ ...e, _type: 'expense' })),
     ...(data?.income || []).map(i => ({ ...i, _type: 'income', category: 'Income', note: i.note || 'Income' })),
@@ -243,39 +241,31 @@ export default function Dashboard() {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={54}
+                      innerRadius={62}
                       outerRadius={78}
-                      strokeWidth={2}
-                      stroke="var(--surface)"
                     >
                       {data.categoryBreakdown.map((entry, i) => (
-                        <Cell key={entry.name} fill={getCategoryMeta(entry.name).color} />
+                        <Cell key={entry.name} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
                       ))}
                     </Pie>
+                    <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle"
+                      style={{ fontSize: '11px', fill: 'var(--ink-4)', fontFamily: 'DM Sans' }}>
+                      spent
+                    </text>
+                    <text x="50%" y="56%" textAnchor="middle" dominantBaseline="middle"
+                      style={{ fontSize: '15px', fontWeight: '500', fill: 'var(--ink)', fontFamily: 'DM Mono' }}>
+                      {formatCurrency(data?.totalExpenses)}
+                    </text>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
-                {topCategory && (
-                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-                    <p className="text-[10px] uppercase tracking-[0.2em]" style={{ color: 'var(--ink-4)' }}>
-                      Top category:
-                    </p>
-                    <p className="mt-1 text-sm font-medium truncate max-w-full" style={{ color: 'var(--ink)' }}>
-                      {topCategory.name}
-                    </p>
-                    <p className="mt-1 text-xs font-mono" style={{ color: 'var(--ink-3)' }}>
-                      {formatCurrencyFull(topCategory.amount)}
-                    </p>
-                  </div>
-                )}
               </div>
               <div className="space-y-2">
                 {data.categoryBreakdown.slice(0, 5).map((cat, i) => {
-                  const meta = getCategoryMeta(cat.name)
                   const pct = data.totalExpenses ? Math.round((cat.amount / data.totalExpenses) * 100) : 0
                   return (
                     <div key={cat.name} className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ background: meta.color }} />
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
                       <span className="text-xs flex-1 truncate" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>
                       <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>{pct}%</span>
                     </div>

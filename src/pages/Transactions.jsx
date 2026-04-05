@@ -229,7 +229,7 @@ export default function Transactions() {
                             style={{
                               background: editForm.category === cat.name ? cat.color + '18' : 'var(--surface)',
                               color: editForm.category === cat.name ? cat.color : 'var(--ink-4)',
-                              borderColor: editForm.category === cat.name ? cat.color + '40' : 'var(--border)',
+                              borderColor: editForm.category === cat.name ? 'var(--ink)' : 'var(--border)',
                             }}
                           >
                             {cat.icon} {cat.name}

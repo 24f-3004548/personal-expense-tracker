@@ -105,7 +105,7 @@ export default function QuickAdd({ onAdded }) {
               style={{
                 background: category === cat.name ? cat.color + '18' : 'var(--surface-2)',
                 color: category === cat.name ? cat.color : 'var(--ink-3)',
-                border: `1px solid ${category === cat.name ? cat.color + '40' : 'var(--border)'}`,
+                border: `1px solid ${category === cat.name ? 'var(--ink)' : 'var(--border)'}`,
                 fontWeight: category === cat.name ? '500' : '400',
               }}
             >
