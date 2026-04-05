@@ -107,6 +107,9 @@ export default function Dashboard() {
   const totalExpenses = data?.totalExpenses || 0
   const budgetPct = budgetAmount > 0 ? (totalExpenses / budgetAmount) * 100 : 0
   const isOver = budgetPct > 100
+  const topCategory = data?.categoryBreakdown?.length
+    ? data.categoryBreakdown.reduce((max, category) => (Number(category.amount) > Number(max.amount) ? category : max), data.categoryBreakdown[0])
+    : null
   const recentTransactions = [
     ...(data?.expenses || []).map(e => ({ ...e, _type: 'expense' })),
     ...(data?.income || []).map(i => ({ ...i, _type: 'income', category: 'Income', note: i.note || 'Income' })),
@@ -248,12 +251,16 @@ export default function Dashboard() {
                       ))}
                     </Pie>
                     <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle"
-                      style={{ fontSize: '11px', fill: 'var(--ink-4)', fontFamily: 'DM Sans' }}>
-                      spent
+                      style={{ fontSize: '10px', fill: 'var(--ink-4)', fontFamily: 'DM Sans' }}>
+                      Top Category:
                     </text>
                     <text x="50%" y="56%" textAnchor="middle" dominantBaseline="middle"
-                      style={{ fontSize: '15px', fontWeight: '500', fill: 'var(--ink)', fontFamily: 'DM Mono' }}>
-                      {formatCurrency(data?.totalExpenses)}
+                      style={{ fontSize: '13px', fontWeight: '500', fill: 'var(--ink)', fontFamily: 'DM Sans' }}>
+                      {topCategory?.name || 'No expenses'}
+                    </text>
+                    <text x="50%" y="66%" textAnchor="middle" dominantBaseline="middle"
+                      style={{ fontSize: '12px', fill: 'var(--ink-3)', fontFamily: 'DM Mono' }}>
+                      {topCategory ? formatCurrency(topCategory.amount) : ' '}
                     </text>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>

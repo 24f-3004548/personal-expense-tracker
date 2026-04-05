@@ -63,7 +63,7 @@ export default function QuickAdd({ onAdded }) {
       {/* Amount + Quick amounts */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2" style={{border: `1.5px solid ${focused ? 'var(--ink)' : 'var(--border)'}`, borderRadius: '10px', padding: '10px 12px', transition: 'border-color 0.15s ease',}}>
-          <span className="text-lg font-mono" style={{ color: 'var(--ink-4)' }}>₹</span>
+          <span className="text-lg font-mono" style={{ color: 'var(--ink)' }}>₹</span>
           <input
             ref={amountRef}
             type="number"
