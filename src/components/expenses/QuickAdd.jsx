@@ -61,7 +61,7 @@ export default function QuickAdd({ onAdded }) {
 
       {/* Amount + Quick amounts */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2 overflow-hidden">
+        <div className="flex items-center gap-2 mb-2 px-3 py-2.5 rounded-lg border">
           <span className="text-lg font-mono" style={{ color: 'var(--ink-4)' }}>₹</span>
           <input
             ref={amountRef}
