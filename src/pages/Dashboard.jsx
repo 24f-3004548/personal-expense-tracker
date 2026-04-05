@@ -13,7 +13,6 @@ import QuickAdd from '../components/expenses/QuickAdd'
 import AddIncomeModal from '../components/income/AddIncomeModal'
 
 const now = new Date()
-const DONUT_COLORS = ['#0f0f0f', '#3a3a3a', '#6b6b6b', '#9a9a9a', '#c4c4c0', '#e2e2dc']
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -245,7 +244,7 @@ export default function Dashboard() {
                       outerRadius={78}
                     >
                       {data.categoryBreakdown.map((entry, i) => (
-                        <Cell key={entry.name} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                        <Cell key={entry.name} fill={getCategoryMeta(entry.name).color} />
                       ))}
                     </Pie>
                     <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle"
@@ -262,10 +261,11 @@ export default function Dashboard() {
               </div>
               <div className="space-y-2">
                 {data.categoryBreakdown.slice(0, 5).map((cat, i) => {
+                  const meta = getCategoryMeta(cat.name)
                   const pct = data.totalExpenses ? Math.round((cat.amount / data.totalExpenses) * 100) : 0
                   return (
                     <div key={cat.name} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }} />
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: meta.color }} />
                       <span className="text-xs flex-1 truncate" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>
                       <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>{pct}%</span>
                     </div>
