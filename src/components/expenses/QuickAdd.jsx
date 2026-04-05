@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { DEFAULT_CATEGORIES, addExpense, formatCurrencyFull } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 
@@ -13,10 +13,6 @@ export default function QuickAdd({ onAdded }) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const amountRef = useRef(null)
-
-  useEffect(() => {
-    amountRef.current?.focus()
-  }, [])
 
   const submit = async (overrideAmount) => {
     const val = overrideAmount || Number(amount)

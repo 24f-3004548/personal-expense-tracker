@@ -272,7 +272,7 @@ export default function Transactions() {
                 <p className="text-sm font-mono font-medium shrink-0" style={{ color: item._type === 'income' ? 'var(--green)' : 'var(--red)' }}>
                   {item._type === 'income' ? '+' : '−'}{formatCurrencyFull(item.amount)}
                 </p>
-                <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex gap-1 shrink-0">
                   <button onClick={() => startEdit(item)}
                     className="w-8 h-8 md:w-6 md:h-6 flex items-center justify-center rounded text-xs"
                     style={{ color: 'var(--ink-4)' }} title="Edit">

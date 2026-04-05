@@ -18,8 +18,6 @@ export default function AddIncomeModal({ onClose, onAdded, month, year }) {
   const defaultDate = new Date(year, month, Math.min(today.getDate(), new Date(year, month + 1, 0).getDate()))
   const [date, setDate] = useState(toLocalDateInputValue(defaultDate))
   const [loading, setLoading] = useState(false)
-  const shouldAutoFocus = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
-
   const submit = async () => {
     if (!amount || Number(amount) <= 0) return
     setLoading(true)
@@ -59,7 +57,6 @@ export default function AddIncomeModal({ onClose, onAdded, month, year }) {
                 placeholder="0"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                autoFocus={shouldAutoFocus}
                 className="flex-1 bg-transparent outline-none text-sm font-mono font-medium"
                 style={{ color: 'var(--ink)' }}
               />
