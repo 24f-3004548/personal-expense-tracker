@@ -75,7 +75,7 @@ export default function QuickAdd({ onAdded }) {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             className="flex-1 text-2xl font-mono font-medium bg-transparent outline-none"
-            style={{ color: 'var(--ink)' }}
+            style={{ color: 'var(--ink)', outline: 'none', boxShadow: 'none' }}
           />
         </div>
         <div className="flex gap-1.5">
