@@ -12,6 +12,7 @@ export default function QuickAdd({ onAdded }) {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [focused, setFocused] = useState(false)
   const amountRef = useRef(null)
 
   const submit = async (overrideAmount) => {
@@ -61,7 +62,7 @@ export default function QuickAdd({ onAdded }) {
 
       {/* Amount + Quick amounts */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2 px-3 py-2.5 rounded-lg border">
+        <div className="flex items-center gap-2 mb-2" style={{border: `1.5px solid ${focused ? 'var(--ink)' : 'var(--border)'}`, borderRadius: '10px', padding: '10px 12px', transition: 'border-color 0.15s ease', background: 'var(--surface-2)',}}>
           <span className="text-lg font-mono" style={{ color: 'var(--ink-4)' }}>₹</span>
           <input
             ref={amountRef}
@@ -71,7 +72,9 @@ export default function QuickAdd({ onAdded }) {
             value={amount}
             onChange={e => setAmount(e.target.value)}
             onKeyDown={handleKey}
-            className="flex-1 text-2xl font-mono font-medium bg-transparent outline-none placeholder:text-gray-200"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            className="flex-1 text-2xl font-mono font-medium bg-transparent outline-none"
             style={{ color: 'var(--ink)' }}
           />
         </div>
