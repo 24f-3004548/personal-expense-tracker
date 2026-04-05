@@ -250,17 +250,28 @@ export default function Dashboard() {
                         <Cell key={entry.name} fill={getCategoryMeta(entry.name).color} />
                       ))}
                     </Pie>
-                    <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle"
-                      style={{ fontSize: '10px', fill: 'var(--ink-4)', fontFamily: 'DM Sans' }}>
-                      Top Category:
-                    </text>
-                    <text x="50%" y="56%" textAnchor="middle" dominantBaseline="middle"
-                      style={{ fontSize: '13px', fontWeight: '500', fill: 'var(--ink)', fontFamily: 'DM Sans' }}>
-                      {topCategory?.name || 'No expenses'}
-                    </text>
-                    <text x="50%" y="66%" textAnchor="middle" dominantBaseline="middle"
-                      style={{ fontSize: '12px', fill: 'var(--ink-3)', fontFamily: 'DM Mono' }}>
-                      {topCategory ? formatCurrency(topCategory.amount) : ' '}
+                    <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
+                      <tspan
+                        x="50%"
+                        dy="-1.3em"
+                        style={{ fontSize: '10px', fill: 'var(--ink-4)', fontFamily: 'DM Sans' }}
+                      >
+                        Top Category:
+                      </tspan>
+                      <tspan
+                        x="50%"
+                        dy="1.6em"
+                        style={{ fontSize: '13px', fontWeight: '500', fill: 'var(--ink)', fontFamily: 'DM Sans' }}
+                      >
+                        {topCategory?.name || 'No expenses'}
+                      </tspan>
+                      <tspan
+                        x="50%"
+                        dy="1.6em"
+                        style={{ fontSize: '12px', fill: 'var(--ink-3)', fontFamily: 'DM Mono' }}
+                      >
+                        {topCategory ? formatCurrency(topCategory.amount) : ' '}
+                      </tspan>
                     </text>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
