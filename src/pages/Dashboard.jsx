@@ -107,6 +107,9 @@ export default function Dashboard() {
   const totalExpenses = data?.totalExpenses || 0
   const budgetPct = budgetAmount > 0 ? (totalExpenses / budgetAmount) * 100 : 0
   const isOver = budgetPct > 100
+  const topCategory = data?.categoryBreakdown?.length
+    ? data.categoryBreakdown.reduce((max, category) => (Number(category.amount) > Number(max.amount) ? category : max), data.categoryBreakdown[0])
+    : null
   const recentTransactions = [
     ...(data?.expenses || []).map(e => ({ ...e, _type: 'expense' })),
     ...(data?.income || []).map(i => ({ ...i, _type: 'income', category: 'Income', note: i.note || 'Income' })),
@@ -231,7 +234,7 @@ export default function Dashboard() {
           <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Spending by category</p>
           {data?.categoryBreakdown?.length > 0 ? (
             <div className="flex flex-col gap-3">
-              <div style={{ width: '100%', height: 180 }}>
+              <div className="relative" style={{ width: '100%', height: 180 }}>
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
@@ -252,6 +255,19 @@ export default function Dashboard() {
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
+                {topCategory && (
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                    <p className="text-[10px] uppercase tracking-[0.2em]" style={{ color: 'var(--ink-4)' }}>
+                      Top category:
+                    </p>
+                    <p className="mt-1 text-sm font-medium truncate max-w-full" style={{ color: 'var(--ink)' }}>
+                      {topCategory.name}
+                    </p>
+                    <p className="mt-1 text-xs font-mono" style={{ color: 'var(--ink-3)' }}>
+                      {formatCurrencyFull(topCategory.amount)}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 {data.categoryBreakdown.slice(0, 5).map((cat, i) => {
