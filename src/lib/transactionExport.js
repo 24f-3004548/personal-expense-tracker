@@ -248,7 +248,7 @@ const buildDualAxisLineChartBlock = async (title, subtitle, buckets) => {
       <img
         src="${escapeHtml(chartUrl)}"
         width="${width}"
-        style="display:block;margin-top:16px;border-radius:8px;"
+        style="display:block;margin:16px auto;border-radius:8px;"
         alt="Cash flow chart"
       />
     `
