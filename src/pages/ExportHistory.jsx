@@ -21,7 +21,8 @@ export default function ExportHistory() {
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [exportError, setExportError] = useState('')
 
   useEffect(() => {
     if (!user?.id || !startDate || !endDate || startDate > endDate) {
@@ -34,7 +35,7 @@ export default function ExportHistory() {
 
     const load = async () => {
       setLoading(true)
-      setError('')
+      setLoadError('')
       try {
         const data = await getTransactionsInRange(user.id, startDate, endDate)
         if (active) setTransactions(data)
@@ -42,7 +43,7 @@ export default function ExportHistory() {
         console.error(requestError)
         if (active) {
           setTransactions([])
-          setError('Unable to load the selected range right now.')
+          setLoadError('Unable to load the selected range right now.')
         }
       } finally {
         if (active) setLoading(false)
@@ -78,7 +79,7 @@ export default function ExportHistory() {
 
     setExporting(true)
     setMessage('')
-    setError('')
+    setExportError('')
 
     try {
       const html = buildTransactionReportHtml({
@@ -110,7 +111,7 @@ export default function ExportHistory() {
       setMessage(`Report sent to ${user.email}.`)
     } catch (exportError) {
       console.error(exportError)
-      setError('We could not send the email. Please try again.')
+      setExportError(exportError?.message || 'We could not send the email. Please try again.')
     } finally {
       setExporting(false)
     }
@@ -164,8 +165,8 @@ export default function ExportHistory() {
 
         {loading ? (
           <div className="py-8 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Loading transactions...</div>
-        ) : error ? (
-          <div className="rounded-xl border p-3 text-sm" style={{ borderColor: 'var(--red)', background: 'var(--red-light)', color: 'var(--red)' }}>{error}</div>
+        ) : loadError ? (
+          <div className="rounded-xl border p-3 text-sm" style={{ borderColor: 'var(--red)', background: 'var(--red-light)', color: 'var(--red)' }}>{loadError}</div>
         ) : transactions.length === 0 ? (
           <div className="py-8 text-center text-sm" style={{ color: 'var(--ink-4)' }}>No transactions found for this range.</div>
         ) : (
@@ -211,9 +212,9 @@ export default function ExportHistory() {
             {message}
           </div>
         )}
-        {error && !loading && transactions.length > 0 && (
+        {exportError && !loading && transactions.length > 0 && (
           <div className="rounded-xl border p-3 mb-3 text-sm" style={{ borderColor: 'var(--red)', background: 'var(--red-light)', color: 'var(--red)' }}>
-            {error}
+            {exportError}
           </div>
         )}
 
