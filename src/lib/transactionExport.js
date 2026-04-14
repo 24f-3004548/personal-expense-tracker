@@ -1,3 +1,4 @@
+import { format } from 'date-fns'
 import { formatCurrencyFull, getCategoryMeta } from './supabase'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -118,6 +119,7 @@ const getChartUrl = async (chartConfig) => {
       width: 600,
       height: 300,
       backgroundColor: 'white',
+      format: 'png',
     }),
   })
 
@@ -129,7 +131,7 @@ const getChartUrl = async (chartConfig) => {
   if (!payload?.url) {
     throw new Error('QuickChart create did not return a URL')
   }
-
+  console.log(chartUrl)
   return payload.url
 }
 
