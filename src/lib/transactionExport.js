@@ -127,21 +127,67 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
           label: 'Income',
           data: incomeData,
           borderColor: '#16a34a',
+          borderWidth: 2,
+          tension: 0.35,
+          pointRadius: 2,
           fill: false,
+          yAxisID: 'y1',
         },
         {
           label: 'Expenses',
           data: expenseData,
           borderColor: '#111827',
+          borderWidth: 2,
+          tension: 0.35,
+          pointRadius: 2,
           fill: false,
+          yAxisID: 'y2',
         }
       ]
     },
     options: {
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#6b7280',
+            boxWidth: 12,
+            font: { size: 10 }
+          }
+        }
+      },
       scales: {
-        x: { display: true },
-        y: { display: true }
+        x: {
+          ticks: {
+            color: '#9ca3af',
+            font: { size: 9 },
+            maxRotation: 45,
+            minRotation: 45
+          },
+          grid: {
+            color: 'rgba(0,0,0,0.04)'
+          }
+        },
+        y1: {
+          position: 'left',
+          ticks: {
+            color: '#16a34a',
+            font: { size: 9 }
+          },
+          grid: {
+            color: 'rgba(0,0,0,0.04)'
+          }
+        },
+        y2: {
+          position: 'right',
+          ticks: {
+            color: '#111827',
+            font: { size: 9 }
+          },
+          grid: {
+            drawOnChartArea: false
+          }
+        }
       }
     }
   }
