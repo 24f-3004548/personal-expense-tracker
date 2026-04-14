@@ -111,12 +111,17 @@ const buildCategoryBreakdown = (transactions) => {
 
 const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
   const width = 600
-  const labels = buckets.map(b => b.label)
+  const maxPoints = 25
+  const step = Math.ceil(buckets.length / maxPoints)
+
+  const sampled = buckets.filter((_, i) => i % step === 0)
+
+  const labels = sampled.map(b => b.label)
   const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
   const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
 
-  const incomeData = buckets.map(b => Number(b.income) || 0)
-  const expenseData = buckets.map(b => Number(b.expenses) || 0)
+  const incomeData = sampled.map(b => Number(b.income) || 0)
+  const expenseData = sampled.map(b => Number(b.expenses) || 0)
 
   const chartConfig = {
     type: 'line',
