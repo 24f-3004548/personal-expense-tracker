@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { formatCurrencyFull, getCategoryMeta, getTransactionsInRange } from '../lib/supabase'
+import { formatCurrencyFull, getCategoryMeta, getTransactionsInRange, supabase } from '../lib/supabase'
 import { buildTransactionReportHtml, buildTransactionWorkbookBase64 } from '../lib/transactionExport'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -150,10 +150,18 @@ export default function ExportHistory() {
       })
       const workbookBase64 = await buildTransactionWorkbookBase64(transactions, startDate, endDate)
 
-      await fetch('https://opuwlnvmaxdrssbzmqnz.supabase.co/functions/v1/resend-email', {
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+
+      if (!accessToken) {
+        throw new Error('Missing auth session. Please sign in again.')
+      }
+
+      const response = await fetch('https://opuwlnvmaxdrssbzmqnz.supabase.co/functions/v1/resend-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           to: user.email,
@@ -167,6 +175,11 @@ export default function ExportHistory() {
           ],
         }),
       })
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '')
+        throw new Error(errorText || `Email function failed with status ${response.status}`)
+      }
 
       setMessage(`Report sent to ${user.email}.`)
     } catch (exportError) {
