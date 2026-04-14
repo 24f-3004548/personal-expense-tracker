@@ -135,10 +135,9 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
     return `${x},${y}`
   }).join(' ')
 
-  const chart = `
-    <svg viewBox="0 0 ${width} ${height}" width="100%" style="margin-top:16px;">
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
       
-      <!-- Income line -->
       <polyline
         fill="none"
         stroke="#16a34a"
@@ -146,7 +145,6 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
         points="${incomePoints}"
       />
 
-      <!-- Expense line -->
       <polyline
         fill="none"
         stroke="#111827"
@@ -154,7 +152,6 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
         points="${expensePoints}"
       />
 
-      <!-- Points -->
       ${buckets.map((b, i) => {
         const x = padding + i * stepX
         const iy = height - padding - ((Number(b.income) || 0) / incomeMax) * (height - padding * 2)
@@ -167,6 +164,20 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
       }).join('')}
       
     </svg>
+  `
+
+  const svgBase64 = (typeof Buffer !== 'undefined')
+    ? Buffer.from(svg).toString('base64')
+    : btoa(unescape(encodeURIComponent(svg)))
+
+  const chart = `
+    <img 
+      src="data:image/svg+xml;base64,${svgBase64}" 
+      width="${width}" 
+      height="${height}" 
+      style="display:block;margin-top:16px;"
+      alt="Cash flow chart"
+    />
   `
 
   return `
