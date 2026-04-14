@@ -112,70 +112,47 @@ const buildCategoryBreakdown = (transactions) => {
 }
 
 const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
-  const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
-  const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
-
   const width = 600
-  const height = 220
-  const padding = 30
+  const labels = buckets.map(b => b.label)
 
-  const stepX = buckets.length > 1
-    ? (width - padding * 2) / (buckets.length - 1)
-    : 0
+  const incomeData = buckets.map(b => Number(b.income) || 0)
+  const expenseData = buckets.map(b => Number(b.expenses) || 0)
 
-  const incomePoints = buckets.map((b, i) => {
-    const x = padding + i * stepX
-    const y = height - padding - ((Number(b.income) || 0) / incomeMax) * (height - padding * 2)
-    return `${x},${y}`
-  }).join(' ')
+  const chartConfig = {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Income',
+          data: incomeData,
+          borderColor: '#16a34a',
+          fill: false,
+        },
+        {
+          label: 'Expenses',
+          data: expenseData,
+          borderColor: '#111827',
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: true },
+        y: { display: true }
+      }
+    }
+  }
 
-  const expensePoints = buckets.map((b, i) => {
-    const x = padding + i * stepX
-    const y = height - padding - ((Number(b.expenses) || 0) / expenseMax) * (height - padding * 2)
-    return `${x},${y}`
-  }).join(' ')
-
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-      
-      <polyline
-        fill="none"
-        stroke="#16a34a"
-        stroke-width="2"
-        points="${incomePoints}"
-      />
-
-      <polyline
-        fill="none"
-        stroke="#111827"
-        stroke-width="2"
-        points="${expensePoints}"
-      />
-
-      ${buckets.map((b, i) => {
-        const x = padding + i * stepX
-        const iy = height - padding - ((Number(b.income) || 0) / incomeMax) * (height - padding * 2)
-        const ey = height - padding - ((Number(b.expenses) || 0) / expenseMax) * (height - padding * 2)
-
-        return `
-          <circle cx="${x}" cy="${iy}" r="2" fill="#16a34a"/>
-          <circle cx="${x}" cy="${ey}" r="2" fill="#111827"/>
-        `
-      }).join('')}
-      
-    </svg>
-  `
-
-  const svgBase64 = (typeof Buffer !== 'undefined')
-    ? Buffer.from(svg).toString('base64')
-    : btoa(unescape(encodeURIComponent(svg)))
+  const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`
 
   const chart = `
     <img 
-      src="data:image/svg+xml;base64,${svgBase64}" 
+      src="${chartUrl}" 
       width="${width}" 
-      height="${height}" 
-      style="display:block;margin-top:16px;"
+      style="display:block;margin-top:16px;border-radius:8px;"
       alt="Cash flow chart"
     />
   `
