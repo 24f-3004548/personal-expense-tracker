@@ -114,30 +114,60 @@ const buildCategoryBreakdown = (transactions) => {
 const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
   const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
   const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
-  const rows = buckets.slice(0, 10).map((bucket) => {
-    const income = Number(bucket.income) || 0
-    const expenses = Number(bucket.expenses) || 0
-    const incomeWidth = Math.max(income > 0 ? 6 : 0, Math.round((income / incomeMax) * 100))
-    const expenseWidth = Math.max(expenses > 0 ? 6 : 0, Math.round((expenses / expenseMax) * 100))
 
-    return `
-      <tr>
-        <td style="padding:9px 12px;border-top:1px solid #f3f4f6;font-size:11px;color:#6b7280;white-space:nowrap;">${escapeHtml(bucket.label)}</td>
-        <td style="padding:9px 10px;border-top:1px solid #f3f4f6;">
-          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;height:6px;background:#ecfdf3;border-radius:999px;overflow:hidden;">
-            <tr><td style="width:${incomeWidth}%;background:#16a34a;font-size:0;line-height:0;">&nbsp;</td><td style="font-size:0;line-height:0;">&nbsp;</td></tr>
-          </table>
-          <div style="font-size:11px;color:#16a34a;font-family:monospace;padding-top:4px;">${escapeHtml(formatCurrencyFull(income))}</div>
-        </td>
-        <td style="padding:9px 10px;border-top:1px solid #f3f4f6;">
-          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
-            <tr><td style="width:${expenseWidth}%;background:#111827;font-size:0;line-height:0;">&nbsp;</td><td style="font-size:0;line-height:0;">&nbsp;</td></tr>
-          </table>
-          <div style="font-size:11px;color:#111827;font-family:monospace;padding-top:4px;">${escapeHtml(formatCurrencyFull(expenses))}</div>
-        </td>
-      </tr>
-    `
-  }).join('')
+  const width = 600
+  const height = 220
+  const padding = 30
+
+  const stepX = buckets.length > 1
+    ? (width - padding * 2) / (buckets.length - 1)
+    : 0
+
+  const incomePoints = buckets.map((b, i) => {
+    const x = padding + i * stepX
+    const y = height - padding - ((Number(b.income) || 0) / incomeMax) * (height - padding * 2)
+    return `${x},${y}`
+  }).join(' ')
+
+  const expensePoints = buckets.map((b, i) => {
+    const x = padding + i * stepX
+    const y = height - padding - ((Number(b.expenses) || 0) / expenseMax) * (height - padding * 2)
+    return `${x},${y}`
+  }).join(' ')
+
+  const chart = `
+    <svg viewBox="0 0 ${width} ${height}" width="100%" style="margin-top:16px;">
+      
+      <!-- Income line -->
+      <polyline
+        fill="none"
+        stroke="#16a34a"
+        stroke-width="2"
+        points="${incomePoints}"
+      />
+
+      <!-- Expense line -->
+      <polyline
+        fill="none"
+        stroke="#111827"
+        stroke-width="2"
+        points="${expensePoints}"
+      />
+
+      <!-- Points -->
+      ${buckets.map((b, i) => {
+        const x = padding + i * stepX
+        const iy = height - padding - ((Number(b.income) || 0) / incomeMax) * (height - padding * 2)
+        const ey = height - padding - ((Number(b.expenses) || 0) / expenseMax) * (height - padding * 2)
+
+        return `
+          <circle cx="${x}" cy="${iy}" r="2" fill="#16a34a"/>
+          <circle cx="${x}" cy="${ey}" r="2" fill="#111827"/>
+        `
+      }).join('')}
+      
+    </svg>
+  `
 
   return `
     <div style="margin-top:24px;">
@@ -151,28 +181,13 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
         </tr>
       </table>
 
-      <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;border-collapse:separate;overflow:hidden;">
-        <tr>
-          <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;">Income max: ${escapeHtml(formatCurrencyFull(incomeMax))}</td>
-          <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;text-align:right;">Expenses max: ${escapeHtml(formatCurrencyFull(expenseMax))}</td>
-        </tr>
-        <tr>
-          <td colspan="2" style="padding:0;">
-            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
-              <thead>
-                <tr style="background:#f9fafb;">
-                  <th style="padding:8px 12px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;text-align:left;font-weight:600;">Range</th>
-                  <th style="padding:8px 10px;font-size:10px;color:#16a34a;text-transform:uppercase;letter-spacing:.08em;text-align:left;font-weight:600;">Income axis</th>
-                  <th style="padding:8px 10px;font-size:10px;color:#111827;text-transform:uppercase;letter-spacing:.08em;text-align:left;font-weight:600;">Expenses axis</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows}
-              </tbody>
-            </table>
-          </td>
-        </tr>
-      </table>
+      <div style="margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;padding:12px;">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:6px;">
+          Income max: ${escapeHtml(formatCurrencyFull(incomeMax))} · 
+          Expenses max: ${escapeHtml(formatCurrencyFull(expenseMax))}
+        </div>
+        ${chart}
+      </div>
     </div>
   `
 }
