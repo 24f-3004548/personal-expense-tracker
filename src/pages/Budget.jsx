@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
   getBudget, upsertBudget, getExpenses,
-  getCategoryMeta, formatCurrencyFull, DEFAULT_CATEGORIES, MONTH_NAMES
+  formatCurrencyFull, MONTH_NAMES
 } from '../lib/supabase'
 
 const now = new Date()
@@ -49,16 +49,6 @@ export default function Budget() {
   const remaining = budgetAmount - totalSpent
   const pct = budgetAmount ? Math.min((totalSpent / budgetAmount) * 100, 100) : 0
   const isOver = remaining < 0
-
-  // Category breakdown
-  const catMap = {}
-  expenses.forEach(e => {
-    if (!catMap[e.category]) catMap[e.category] = 0
-    catMap[e.category] += Number(e.amount)
-  })
-  const cats = Object.entries(catMap)
-    .map(([name, amount]) => ({ name, amount }))
-    .sort((a, b) => b.amount - a.amount)
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
@@ -140,42 +130,7 @@ export default function Budget() {
         </div>
       )}
 
-      {/* Category breakdown */}
-      {cats.length > 0 && (
-        <div className="rounded-xl border overflow-hidden animate-fade-up stagger-3"
-          style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-          <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
-            <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Spending by category</p>
-          </div>
-          {cats.map(cat => {
-            const meta = getCategoryMeta(cat.name)
-            const catPct = totalSpent ? (cat.amount / totalSpent) * 100 : 0
-            return (
-              <div key={cat.name} className="px-4 py-3 border-b last:border-0"
-                style={{ borderColor: 'var(--border)' }}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span>{meta.icon}</span>
-                    <span className="text-sm" style={{ color: 'var(--ink)' }}>{cat.name}</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-xs" style={{ color: 'var(--ink-4)' }}>{catPct.toFixed(0)}%</span>
-                    <span className="text-sm font-mono" style={{ color: 'var(--ink)' }}>{formatCurrencyFull(cat.amount)}</span>
-                  </div>
-                </div>
-                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${catPct}%`, background: meta.color }}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {!loading && cats.length === 0 && budgetAmount === 0 && (
+      {!loading && budgetAmount === 0 && (
         <div className="text-center py-16">
           <p className="text-sm" style={{ color: 'var(--ink-4)' }}>Set a budget above to start tracking</p>
         </div>

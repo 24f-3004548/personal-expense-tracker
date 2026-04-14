@@ -92,7 +92,7 @@ export default function ExportHistory() {
       const { data, error: fnError } = await supabase.functions.invoke('resend-email', {
         body: {
           to: user.email,
-          subject: 'Your Transaction Report',
+          subject: 'Transaction Report - ' + formatLongDate(startDate) + ' to ' + formatLongDate(endDate),
           html,
           attachments: [
             {

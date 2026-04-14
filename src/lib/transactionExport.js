@@ -114,94 +114,30 @@ const buildCategoryBreakdown = (transactions) => {
 const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
   const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
   const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
-  const labels = buckets.map((bucket) => bucket.label)
-  const incomeSeries = buckets.map((bucket) => Number(bucket.income) || 0)
-  const expenseSeries = buckets.map((bucket) => Number(bucket.expenses) || 0)
+  const rows = buckets.slice(0, 10).map((bucket) => {
+    const income = Number(bucket.income) || 0
+    const expenses = Number(bucket.expenses) || 0
+    const incomeWidth = Math.max(income > 0 ? 6 : 0, Math.round((income / incomeMax) * 100))
+    const expenseWidth = Math.max(expenses > 0 ? 6 : 0, Math.round((expenses / expenseMax) * 100))
 
-  const chartConfig = {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Income',
-          data: incomeSeries,
-          yAxisID: 'yIncome',
-          borderColor: '#16a34a',
-          backgroundColor: '#16a34a',
-          borderWidth: 3,
-          pointRadius: 3,
-          pointHoverRadius: 4,
-          tension: 0.35,
-          fill: false,
-        },
-        {
-          label: 'Expenses',
-          data: expenseSeries,
-          yAxisID: 'yExpenses',
-          borderColor: '#111827',
-          backgroundColor: '#111827',
-          borderWidth: 3,
-          pointRadius: 3,
-          pointHoverRadius: 4,
-          tension: 0.35,
-          fill: false,
-        },
-      ],
-    },
-    options: {
-      devicePixelRatio: 2,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            usePointStyle: true,
-            boxWidth: 8,
-            color: '#6b7280',
-            font: { size: 12 },
-          },
-        },
-      },
-      layout: {
-        padding: { top: 6, left: 6, right: 6, bottom: 0 },
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: '#6b7280',
-            maxRotation: 0,
-            autoSkip: true,
-            font: { size: 10 },
-          },
-          grid: { color: '#eef2f7' },
-        },
-        yIncome: {
-          position: 'left',
-          min: 0,
-          max: incomeMax,
-          ticks: {
-            color: '#16a34a',
-            font: { size: 10 },
-            callback: 'function(v){return "₹" + Number(v).toLocaleString("en-IN")}',
-          },
-          grid: { color: '#eef2f7' },
-        },
-        yExpenses: {
-          position: 'right',
-          min: 0,
-          max: expenseMax,
-          ticks: {
-            color: '#111827',
-            font: { size: 10 },
-            callback: 'function(v){return "₹" + Number(v).toLocaleString("en-IN")}',
-          },
-          grid: { drawOnChartArea: false },
-        },
-      },
-    },
-  }
-
-  const chartUrl = `https://quickchart.io/chart?width=960&height=360&backgroundColor=white&c=${encodeURIComponent(JSON.stringify(chartConfig))}`
+    return `
+      <tr>
+        <td style="padding:9px 12px;border-top:1px solid #f3f4f6;font-size:11px;color:#6b7280;white-space:nowrap;">${escapeHtml(bucket.label)}</td>
+        <td style="padding:9px 10px;border-top:1px solid #f3f4f6;">
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;height:6px;background:#ecfdf3;border-radius:999px;overflow:hidden;">
+            <tr><td style="width:${incomeWidth}%;background:#16a34a;font-size:0;line-height:0;">&nbsp;</td><td style="font-size:0;line-height:0;">&nbsp;</td></tr>
+          </table>
+          <div style="font-size:11px;color:#16a34a;font-family:monospace;padding-top:4px;">${escapeHtml(formatCurrencyFull(income))}</div>
+        </td>
+        <td style="padding:9px 10px;border-top:1px solid #f3f4f6;">
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+            <tr><td style="width:${expenseWidth}%;background:#111827;font-size:0;line-height:0;">&nbsp;</td><td style="font-size:0;line-height:0;">&nbsp;</td></tr>
+          </table>
+          <div style="font-size:11px;color:#111827;font-family:monospace;padding-top:4px;">${escapeHtml(formatCurrencyFull(expenses))}</div>
+        </td>
+      </tr>
+    `
+  }).join('')
 
   return `
     <div style="margin-top:24px;">
@@ -221,19 +157,19 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
           <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;text-align:right;">Expenses max: ${escapeHtml(formatCurrencyFull(expenseMax))}</td>
         </tr>
         <tr>
-          <td colspan="2" style="padding:10px;">
-            <img
-              src="${chartUrl}"
-              alt="Dual-axis line chart showing income and expenses by date range"
-              width="100%"
-              style="display:block;width:100%;max-width:100%;height:auto;border:0;"
-            />
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2" style="padding:10px 12px;font-size:12px;color:#6b7280;">
-            <span style="display:inline-block;margin-right:12px;"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#16a34a;margin-right:6px;"></span>Income</span>
-            <span style="display:inline-block;"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#111827;margin-right:6px;"></span>Expenses</span>
+          <td colspan="2" style="padding:0;">
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
+              <thead>
+                <tr style="background:#f9fafb;">
+                  <th style="padding:8px 12px;font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;text-align:left;font-weight:600;">Range</th>
+                  <th style="padding:8px 10px;font-size:10px;color:#16a34a;text-transform:uppercase;letter-spacing:.08em;text-align:left;font-weight:600;">Income axis</th>
+                  <th style="padding:8px 10px;font-size:10px;color:#111827;text-transform:uppercase;letter-spacing:.08em;text-align:left;font-weight:600;">Expenses axis</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
           </td>
         </tr>
       </table>

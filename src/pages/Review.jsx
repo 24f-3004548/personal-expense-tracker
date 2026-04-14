@@ -142,6 +142,14 @@ export default function Review() {
       .slice(0, 6)
   })()
 
+  const spendByCategoryRows = (data?.categoryBreakdown || [])
+    .map((row) => ({
+      ...row,
+      amount: Number(row.amount) || 0,
+      ...getCategoryMeta(row.name),
+    }))
+    .filter((row) => row.amount > 0)
+
   const TrendTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -207,6 +215,50 @@ export default function Review() {
                   <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{ins.text}</p>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Spending by category */}
+          {spendByCategoryRows.length > 0 && (
+            <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-3"
+              style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+              <div className="flex items-baseline justify-between gap-3 mb-3">
+                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Spending by category</p>
+                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Expense categories only</p>
+              </div>
+
+              <div className="h-2.5 rounded-full overflow-hidden flex mb-3" style={{ background: 'var(--surface-3)' }}>
+                {spendByCategoryRows.map((category) => {
+                  const percent = data.totalExpenses > 0 ? (category.amount / data.totalExpenses) * 100 : 0
+                  return (
+                    <div
+                      key={`review-stack-${category.name}`}
+                      title={`${category.name} ${percent.toFixed(1)}%`}
+                      style={{
+                        width: `${Math.max(percent, 1)}%`,
+                        background: category.color,
+                      }}
+                    />
+                  )
+                })}
+              </div>
+
+              <div className="space-y-2">
+                {spendByCategoryRows.map((category) => {
+                  const percent = data.totalExpenses > 0 ? Math.round((category.amount / data.totalExpenses) * 100) : 0
+                  return (
+                    <div key={`review-row-${category.name}`} className="flex items-center justify-between gap-3 py-1.5 border-b last:border-0" style={{ borderColor: 'var(--border)' }}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: category.color }} />
+                        <span className="text-xs truncate" style={{ color: 'var(--ink-2)' }}>{category.icon} {category.name}</span>
+                      </div>
+                      <span className="text-xs font-mono shrink-0" style={{ color: 'var(--ink-3)' }}>
+                        {formatCurrencyFull(category.amount)} · {percent}%
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
