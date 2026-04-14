@@ -84,8 +84,8 @@ export default function Review() {
     setCompareMonth(m => m + 1)
   }
 
-  const expenseDelta = prevData?.totalExpenses && data?.totalExpenses !== undefined
-    ? ((data.totalExpenses - prevData.totalExpenses) / (prevData.totalExpenses || 1)) * 100
+  const expenseDelta = prevData?.totalExpenses !== undefined && data?.totalExpenses !== undefined
+    ? (data.totalExpenses - prevData.totalExpenses)
     : null
 
   const largestExpense = data?.expenses?.length
@@ -94,10 +94,10 @@ export default function Review() {
 
   const insights = []
   if (expenseDelta !== null) {
-    if (Math.abs(expenseDelta) > 2) {
+    if (Math.abs(expenseDelta) > 0) {
       insights.push({
         icon: expenseDelta > 0 ? '↑' : '↓',
-        text: `You spent ${Math.abs(expenseDelta).toFixed(0)}% ${expenseDelta > 0 ? 'more' : 'less'} than last month`,
+        text: `You spent ${formatCurrencyFull(Math.abs(expenseDelta))} ${expenseDelta > 0 ? 'more' : 'less'} than last month`,
         positive: expenseDelta <= 0,
       })
     } else {

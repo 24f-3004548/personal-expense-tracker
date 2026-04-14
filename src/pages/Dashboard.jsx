@@ -62,7 +62,7 @@ export default function Dashboard() {
   })()
 
   const expenseDelta = prevTrend && currentTrend
-    ? ((currentTrend.expenses - prevTrend.expenses) / (prevTrend.expenses || 1)) * 100
+    ? (currentTrend.expenses - prevTrend.expenses)
     : null
 
   const CustomTooltip = ({ active, payload }) => {
@@ -123,7 +123,7 @@ export default function Dashboard() {
           </div>
           {expenseDelta !== null && prevTrend?.expenses > 0 && (
             <p className="text-xs mt-0.5" style={{ color: expenseDelta > 0 ? 'var(--red)' : 'var(--green)' }}>
-              {expenseDelta > 0 ? '↑' : '↓'} {Math.abs(expenseDelta).toFixed(0)}% vs last month
+              {expenseDelta > 0 ? '↑' : '↓'} {formatCurrencyFull(Math.abs(expenseDelta))} vs last month
             </p>
           )}
           {prevTrend?.expenses === 0 && currentTrend?.expenses > 0 && (

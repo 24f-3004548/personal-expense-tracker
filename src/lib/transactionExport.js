@@ -112,68 +112,62 @@ const buildCategoryBreakdown = (transactions) => {
 }
 
 const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
-  const chartWidth = 680
-  const chartHeight = 220
-  const topPad = 18
-  const bottomPad = 24
-  const sidePad = 26
   const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
   const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
-  const steps = Math.max(1, buckets.length - 1)
-
-  const incomePoints = buckets.map((bucket, index) => {
-    const x = sidePad + ((chartWidth - sidePad * 2) * index) / steps
-    const y = topPad + ((chartHeight - topPad - bottomPad) * (1 - (Number(bucket.income) || 0) / incomeMax))
-    return { x, y, label: bucket.label }
-  })
-
-  const expensePoints = buckets.map((bucket, index) => {
-    const x = sidePad + ((chartWidth - sidePad * 2) * index) / steps
-    const y = topPad + ((chartHeight - topPad - bottomPad) * (1 - (Number(bucket.expenses) || 0) / expenseMax))
-    return { x, y, label: bucket.label }
-  })
-
-  const incomePath = incomePoints.map((point) => `${point.x},${point.y}`).join(' ')
-  const expensePath = expensePoints.map((point) => `${point.x},${point.y}`).join(' ')
 
   return `
     <div style="margin-top:24px;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px;">
-        <div>
-          <div style="font-size:16px;font-weight:700;color:#111827;">${escapeHtml(title)}</div>
-          <div style="font-size:12px;color:#6b7280;margin-top:2px;">${escapeHtml(subtitle)}</div>
-        </div>
-        <div style="font-size:12px;color:#6b7280;white-space:nowrap;">Dual axis</div>
-      </div>
+      <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;width:100%;">
+        <tr>
+          <td style="font-size:16px;font-weight:700;color:#111827;">${escapeHtml(title)}</td>
+          <td style="font-size:12px;color:#6b7280;text-align:right;white-space:nowrap;">Dual axis</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="font-size:12px;color:#6b7280;padding-top:2px;">${escapeHtml(subtitle)}</td>
+        </tr>
+      </table>
 
-      <div style="border:1px solid #e5e7eb;border-radius:16px;padding:12px;">
-        <div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#6b7280;margin-bottom:6px;">
-          <span>Income max: ${escapeHtml(formatCurrencyFull(incomeMax))}</span>
-          <span>Expenses max: ${escapeHtml(formatCurrencyFull(expenseMax))}</span>
-        </div>
-
-        <svg viewBox="0 0 ${chartWidth} ${chartHeight}" width="100%" height="220" role="img" aria-label="Income and expenses line chart">
-          ${[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const y = topPad + (chartHeight - topPad - bottomPad) * ratio
-            return `<line x1="${sidePad}" x2="${chartWidth - sidePad}" y1="${y}" y2="${y}" stroke="#e5e7eb" stroke-dasharray="4 4" />`
-          }).join('')}
-
-          <polyline fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${incomePath}" />
-          <polyline fill="none" stroke="#111827" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${expensePath}" />
-
-          ${incomePoints.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="4" fill="#16a34a" />`).join('')}
-          ${expensePoints.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="4" fill="#111827" />`).join('')}
-        </svg>
-
-        <div style="display:grid;grid-template-columns:repeat(${buckets.length},minmax(0,1fr));gap:8px;margin-top:4px;">
-          ${buckets.map((bucket) => `<div style="font-size:10px;line-height:1.2;color:#6b7280;text-align:center;">${escapeHtml(bucket.label)}</div>`).join('')}
-        </div>
-
-        <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:12px;color:#6b7280;">
-          <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:999px;background:#16a34a;display:inline-block;"></span>Income</span>
-          <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:999px;background:#111827;display:inline-block;"></span>Expenses</span>
-        </div>
-      </div>
+      <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;border-collapse:separate;overflow:hidden;">
+        <tr>
+          <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;">Income max: ${escapeHtml(formatCurrencyFull(incomeMax))}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;text-align:right;">Expenses max: ${escapeHtml(formatCurrencyFull(expenseMax))}</td>
+        </tr>
+        ${buckets.map((bucket) => {
+          const incomePct = Math.max(1, Math.round(((Number(bucket.income) || 0) / incomeMax) * 100))
+          const expensePct = Math.max(1, Math.round(((Number(bucket.expenses) || 0) / expenseMax) * 100))
+          return `
+            <tr>
+              <td colspan="2" style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">
+                <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
+                  <tr>
+                    <td style="font-size:11px;color:#6b7280;padding-bottom:6px;" width="34%">${escapeHtml(bucket.label)}</td>
+                    <td style="font-size:11px;color:#16a34a;padding-bottom:6px;text-align:right;font-family:monospace;" width="33%">${escapeHtml(formatCurrencyFull(bucket.income))}</td>
+                    <td style="font-size:11px;color:#111827;padding-bottom:6px;text-align:right;font-family:monospace;" width="33%">${escapeHtml(formatCurrencyFull(bucket.expenses))}</td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="padding-right:6px;">
+                      <div style="height:6px;background:#ecfdf3;border-radius:999px;overflow:hidden;">
+                        <div style="height:6px;background:#16a34a;width:${incomePct}%;"></div>
+                      </div>
+                    </td>
+                    <td>
+                      <div style="height:6px;background:#f3f4f6;border-radius:999px;overflow:hidden;">
+                        <div style="height:6px;background:#111827;width:${expensePct}%;"></div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          `
+        }).join('')}
+        <tr>
+          <td colspan="2" style="padding:10px 12px;font-size:12px;color:#6b7280;">
+            <span style="display:inline-block;margin-right:12px;"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#16a34a;margin-right:6px;"></span>Income</span>
+            <span style="display:inline-block;"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#111827;margin-right:6px;"></span>Expenses</span>
+          </td>
+        </tr>
+      </table>
     </div>
   `
 }
@@ -201,27 +195,40 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
 
   const categoryRows = categories.length > 0
     ? `
-      <div style="height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;display:flex;">
-        ${categories.map((category) => {
-          const percent = summary.totalExpenses > 0 ? (category.amount / summary.totalExpenses) * 100 : 0
-          return `<span title="${escapeHtml(category.name)}" style="height:100%;width:${Math.max(percent, 1)}%;background:${category.color};display:block;"></span>`
-        }).join('')}
-      </div>
-
-      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
+        <tr>
+          <td style="padding-bottom:10px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
+              <tr>
+                ${categories.map((category) => {
+                  const percent = summary.totalExpenses > 0 ? (category.amount / summary.totalExpenses) * 100 : 0
+                  return `<td style="height:10px;background:${category.color};width:${Math.max(percent, 1)}%;font-size:0;line-height:0;">&nbsp;</td>`
+                }).join('')}
+              </tr>
+            </table>
+          </td>
+        </tr>
         ${categories.map((category) => {
           const percent = summary.totalExpenses > 0 ? Math.round((category.amount / summary.totalExpenses) * 100) : 0
           return `
-            <div style="border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px;display:flex;justify-content:space-between;gap:10px;align-items:center;">
-              <span style="font-size:12px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                <span style="width:8px;height:8px;border-radius:999px;background:${category.color};display:inline-block;margin-right:6px;"></span>
-                ${escapeHtml(category.icon)} ${escapeHtml(category.name)}
-              </span>
-              <span style="font-size:11px;font-family:monospace;color:#4b5563;white-space:nowrap;">${escapeHtml(formatCurrencyFull(category.amount))} · ${percent}%</span>
-            </div>
+            <tr>
+              <td style="padding:6px 0;border-bottom:1px solid #f3f4f6;">
+                <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
+                  <tr>
+                    <td style="font-size:12px;color:#111827;">
+                      <span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:${category.color};margin-right:6px;"></span>
+                      ${escapeHtml(category.icon)} ${escapeHtml(category.name)}
+                    </td>
+                    <td style="font-size:11px;font-family:monospace;color:#4b5563;text-align:right;white-space:nowrap;">
+                      ${escapeHtml(formatCurrencyFull(category.amount))} · ${percent}%
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
           `
         }).join('')}
-      </div>
+      </table>
     `
     : '<div style="font-size:13px;color:#6b7280;">No expense categories in this range.</div>'
 
@@ -242,19 +249,30 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px;">
-            ${[
-              { label: 'Income', value: formatCurrencyFull(summary.totalIncome), color: '#16a34a' },
-              { label: 'Expenses', value: formatCurrencyFull(summary.totalExpenses), color: '#111827' },
-              { label: 'Net', value: formatCurrencyFull(net), color: net >= 0 ? '#16a34a' : '#dc2626' },
-              { label: 'Transactions', value: String(transactions.length), color: '#111827' },
-            ].map((stat) => `
-              <div style="border:1px solid #e5e7eb;border-radius:18px;padding:14px 16px;background:#fafaf8;">
-                <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${escapeHtml(stat.label)}</div>
-                <div style="font-size:20px;line-height:1.1;font-weight:700;color:${stat.color};font-family:monospace;">${escapeHtml(stat.value)}</div>
-              </div>
-            `).join('')}
-          </div>
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-top:22px;border-collapse:separate;border-spacing:8px;">
+            <tr>
+              ${[
+                { label: 'Income', value: formatCurrencyFull(summary.totalIncome), color: '#16a34a' },
+                { label: 'Expenses', value: formatCurrencyFull(summary.totalExpenses), color: '#111827' },
+              ].map((stat) => `
+                <td style="border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;background:#fafaf8;">
+                  <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${escapeHtml(stat.label)}</div>
+                  <div style="font-size:20px;line-height:1.1;font-weight:700;color:${stat.color};font-family:monospace;">${escapeHtml(stat.value)}</div>
+                </td>
+              `).join('')}
+            </tr>
+            <tr>
+              ${[
+                { label: 'Net', value: formatCurrencyFull(net), color: net >= 0 ? '#16a34a' : '#dc2626' },
+                { label: 'Transactions', value: String(transactions.length), color: '#111827' },
+              ].map((stat) => `
+                <td style="border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;background:#fafaf8;">
+                  <div style="font-size:12px;color:#6b7280;margin-bottom:6px;">${escapeHtml(stat.label)}</div>
+                  <div style="font-size:20px;line-height:1.1;font-weight:700;color:${stat.color};font-family:monospace;">${escapeHtml(stat.value)}</div>
+                </td>
+              `).join('')}
+            </tr>
+          </table>
 
           ${buildDualAxisLineChartBlock(
             'Cash flow by range',
@@ -269,7 +287,7 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
           </div>
 
           <div style="margin-top:24px;">
-            <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:8px;">Latest transactions</div>
+            <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:8px;">Recent Transactions</div>
             <div style="border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;">
               <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;width:100%;font-size:13px;">
                 <thead>
