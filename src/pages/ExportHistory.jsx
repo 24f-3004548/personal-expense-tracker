@@ -150,20 +150,8 @@ export default function ExportHistory() {
       })
       const workbookBase64 = await buildTransactionWorkbookBase64(transactions, startDate, endDate)
 
-      const { data: { session } } = await supabase.auth.getSession()
-      const accessToken = session?.access_token
-
-      if (!accessToken) {
-        throw new Error('Missing auth session. Please sign in again.')
-      }
-
-      const response = await fetch('https://opuwlnvmaxdrssbzmqnz.supabase.co/functions/v1/resend-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
+      const { data, error: fnError } = await supabase.functions.invoke('resend-email', {
+        body: {
           to: user.email,
           subject: 'Your Transaction Report',
           html,
@@ -173,12 +161,11 @@ export default function ExportHistory() {
               content: workbookBase64,
             },
           ],
-        }),
+        },
       })
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => '')
-        throw new Error(errorText || `Email function failed with status ${response.status}`)
+      if (fnError) {
+        throw new Error(fnError.message || 'Email function failed')
       }
 
       setMessage(`Report sent to ${user.email}.`)
