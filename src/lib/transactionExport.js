@@ -133,7 +133,6 @@ const getChartUrl = async (chartConfig) => {
   if (!payload?.url) {
     throw new Error('QuickChart create did not return a URL')
   }
-  console.log(payload.url)
   return payload.url
 }
 
@@ -248,7 +247,7 @@ const buildDualAxisLineChartBlock = async (title, subtitle, buckets) => {
       <img
         src="${escapeHtml(chartUrl)}"
         width="${width}"
-        style="display:block;margin:16px auto;border-radius:8px;"
+        style="display:block;margin:16px auto;border-radius:8px;align:center;"
         alt="Cash flow chart"
       />
     `
