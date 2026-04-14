@@ -142,8 +142,6 @@ export default function Review() {
       .slice(0, 6)
   })()
 
-  const barMax = Math.max(1, ...categoryShiftRows.map((row) => Math.max(row.currentAmount, row.previousAmount)))
-
   const TrendTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
@@ -212,35 +210,6 @@ export default function Review() {
             </div>
           )}
 
-          {/* 6-month overview */}
-          {trend.length > 0 && (
-            <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-3"
-              style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-              <div className="flex items-baseline justify-between mb-4">
-                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>6-month overview</p>
-                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
-                  <span style={{ color: 'var(--ink)' }}>▪</span> Spent &nbsp;
-                  <span style={{ color: 'var(--green)' }}>▪</span> Earned
-                </p>
-              </div>
-              <ResponsiveContainer width="100%" height={130}>
-                <BarChart data={trend.map((t) => ({
-                  name: SHORT_MONTHS[t.month],
-                  expenses: t.expenses,
-                  income: t.income,
-                }))} barGap={2} barSize={12}>
-                  <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false}
-                    tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }} />
-                  <YAxis hide />
-                  <Tooltip content={<TrendTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
-                  <Bar dataKey="expenses" fill="var(--ink)" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="income" fill="var(--green)" radius={[3, 3, 0, 0]} opacity={0.6} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
           {/* vs last month */}
           {prevData && (
             <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-4"
@@ -306,16 +275,32 @@ export default function Review() {
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                       <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Category shifts</p>
 
+                      <div className="h-2.5 rounded-full overflow-hidden flex mb-3" style={{ background: 'var(--surface-3)' }}>
+                        {categoryShiftRows.map((row) => {
+                          const meta = getCategoryMeta(row.name)
+                          const currentPct = data.totalExpenses > 0 ? (row.currentAmount / data.totalExpenses) * 100 : 0
+                          return (
+                            <div
+                              key={`stack-${row.name}`}
+                              title={`${row.name} ${currentPct.toFixed(1)}%`}
+                              style={{
+                                width: `${Math.max(1, currentPct)}%`,
+                                background: meta.color,
+                              }}
+                            />
+                          )
+                        })}
+                      </div>
+
                       <div className="flex items-center gap-3 text-[10px] mb-3" style={{ color: 'var(--ink-4)' }}>
-                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink)' }} />{MONTH_NAMES[month]}</span>
-                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink-4)' }} />{MONTH_NAMES[compareMonth]}</span>
+                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink)' }} />{MONTH_NAMES[month]} spend</span>
+                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink-4)' }} />vs {MONTH_NAMES[compareMonth]}</span>
                       </div>
 
                       {categoryShiftRows.map((row) => {
                         const meta = getCategoryMeta(row.name)
-                        const currentPct = (row.currentAmount / barMax) * 100
-                        const previousPct = (row.previousAmount / barMax) * 100
                         const deltaColor = row.delta > 0 ? 'var(--red)' : row.delta < 0 ? 'var(--green)' : 'var(--ink-4)'
+                        const currentPct = data.totalExpenses > 0 ? Math.round((row.currentAmount / data.totalExpenses) * 100) : 0
 
                         return (
                           <div key={row.name} className="py-2.5">
@@ -325,6 +310,9 @@ export default function Review() {
                                 <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{row.name}</span>
                               </div>
                               <div className="flex items-baseline gap-2">
+                                <span className="text-[10px] font-mono" style={{ color: 'var(--ink-4)' }}>
+                                  {currentPct}%
+                                </span>
                                 <span className="text-xs font-mono" style={{ color: 'var(--ink)' }}>
                                   {formatCurrencyFull(row.currentAmount)}
                                 </span>
@@ -333,14 +321,8 @@ export default function Review() {
                                 </span>
                               </div>
                             </div>
-
-                            <div className="space-y-1">
-                              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
-                                <div className="h-full rounded-full" style={{ width: `${Math.max(1, currentPct)}%`, background: 'var(--ink)' }} />
-                              </div>
-                              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
-                                <div className="h-full rounded-full" style={{ width: `${Math.max(1, previousPct)}%`, background: 'var(--ink-4)' }} />
-                              </div>
+                            <div className="text-[10px] font-mono" style={{ color: 'var(--ink-4)' }}>
+                              {MONTH_NAMES[compareMonth]}: {formatCurrencyFull(row.previousAmount)}
                             </div>
                           </div>
                         )
@@ -352,9 +334,38 @@ export default function Review() {
             </div>
           )}
 
+          {/* 6-month overview */}
+          {trend.length > 0 && (
+            <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-5"
+              style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+              <div className="flex items-baseline justify-between mb-4">
+                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>6-month overview</p>
+                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
+                  <span style={{ color: 'var(--ink)' }}>▪</span> Spent &nbsp;
+                  <span style={{ color: 'var(--green)' }}>▪</span> Earned
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={130}>
+                <BarChart data={trend.map((t) => ({
+                  name: SHORT_MONTHS[t.month],
+                  expenses: t.expenses,
+                  income: t.income,
+                }))} barGap={2} barSize={12}>
+                  <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false}
+                    tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }} />
+                  <YAxis hide />
+                  <Tooltip content={<TrendTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
+                  <Bar dataKey="expenses" fill="var(--ink)" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="income" fill="var(--green)" radius={[3, 3, 0, 0]} opacity={0.6} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
           {/* Largest expense */}
           {largestExpense && (
-            <div className="rounded-xl border p-4 animate-fade-up stagger-5"
+            <div className="rounded-xl border p-4 animate-fade-up stagger-6"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
               <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Largest single expense</p>
               <div className="flex items-center gap-3">

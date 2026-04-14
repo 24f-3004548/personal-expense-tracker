@@ -114,6 +114,94 @@ const buildCategoryBreakdown = (transactions) => {
 const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
   const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
   const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
+  const labels = buckets.map((bucket) => bucket.label)
+  const incomeSeries = buckets.map((bucket) => Number(bucket.income) || 0)
+  const expenseSeries = buckets.map((bucket) => Number(bucket.expenses) || 0)
+
+  const chartConfig = {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Income',
+          data: incomeSeries,
+          yAxisID: 'yIncome',
+          borderColor: '#16a34a',
+          backgroundColor: '#16a34a',
+          borderWidth: 3,
+          pointRadius: 3,
+          pointHoverRadius: 4,
+          tension: 0.35,
+          fill: false,
+        },
+        {
+          label: 'Expenses',
+          data: expenseSeries,
+          yAxisID: 'yExpenses',
+          borderColor: '#111827',
+          backgroundColor: '#111827',
+          borderWidth: 3,
+          pointRadius: 3,
+          pointHoverRadius: 4,
+          tension: 0.35,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      devicePixelRatio: 2,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            boxWidth: 8,
+            color: '#6b7280',
+            font: { size: 12 },
+          },
+        },
+      },
+      layout: {
+        padding: { top: 6, left: 6, right: 6, bottom: 0 },
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#6b7280',
+            maxRotation: 0,
+            autoSkip: true,
+            font: { size: 10 },
+          },
+          grid: { color: '#eef2f7' },
+        },
+        yIncome: {
+          position: 'left',
+          min: 0,
+          max: incomeMax,
+          ticks: {
+            color: '#16a34a',
+            font: { size: 10 },
+            callback: 'function(v){return "₹" + Number(v).toLocaleString("en-IN")}',
+          },
+          grid: { color: '#eef2f7' },
+        },
+        yExpenses: {
+          position: 'right',
+          min: 0,
+          max: expenseMax,
+          ticks: {
+            color: '#111827',
+            font: { size: 10 },
+            callback: 'function(v){return "₹" + Number(v).toLocaleString("en-IN")}',
+          },
+          grid: { drawOnChartArea: false },
+        },
+      },
+    },
+  }
+
+  const chartUrl = `https://quickchart.io/chart?width=960&height=360&backgroundColor=white&c=${encodeURIComponent(JSON.stringify(chartConfig))}`
 
   return `
     <div style="margin-top:24px;">
@@ -132,35 +220,16 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
           <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;">Income max: ${escapeHtml(formatCurrencyFull(incomeMax))}</td>
           <td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;font-size:11px;color:#6b7280;text-align:right;">Expenses max: ${escapeHtml(formatCurrencyFull(expenseMax))}</td>
         </tr>
-        ${buckets.map((bucket) => {
-          const incomePct = Math.max(1, Math.round(((Number(bucket.income) || 0) / incomeMax) * 100))
-          const expensePct = Math.max(1, Math.round(((Number(bucket.expenses) || 0) / expenseMax) * 100))
-          return `
-            <tr>
-              <td colspan="2" style="padding:8px 12px;border-bottom:1px solid #f1f5f9;">
-                <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
-                  <tr>
-                    <td style="font-size:11px;color:#6b7280;padding-bottom:6px;" width="34%">${escapeHtml(bucket.label)}</td>
-                    <td style="font-size:11px;color:#16a34a;padding-bottom:6px;text-align:right;font-family:monospace;" width="33%">${escapeHtml(formatCurrencyFull(bucket.income))}</td>
-                    <td style="font-size:11px;color:#111827;padding-bottom:6px;text-align:right;font-family:monospace;" width="33%">${escapeHtml(formatCurrencyFull(bucket.expenses))}</td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" style="padding-right:6px;">
-                      <div style="height:6px;background:#ecfdf3;border-radius:999px;overflow:hidden;">
-                        <div style="height:6px;background:#16a34a;width:${incomePct}%;"></div>
-                      </div>
-                    </td>
-                    <td>
-                      <div style="height:6px;background:#f3f4f6;border-radius:999px;overflow:hidden;">
-                        <div style="height:6px;background:#111827;width:${expensePct}%;"></div>
-                      </div>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          `
-        }).join('')}
+        <tr>
+          <td colspan="2" style="padding:10px;">
+            <img
+              src="${chartUrl}"
+              alt="Dual-axis line chart showing income and expenses by date range"
+              width="100%"
+              style="display:block;width:100%;max-width:100%;height:auto;border:0;"
+            />
+          </td>
+        </tr>
         <tr>
           <td colspan="2" style="padding:10px 12px;font-size:12px;color:#6b7280;">
             <span style="display:inline-block;margin-right:12px;"><span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:#16a34a;margin-right:6px;"></span>Income</span>
@@ -177,21 +246,6 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
   const categories = buildCategoryBreakdown(transactions).slice(0, 6)
   const buckets = buildDailyBuckets(transactions, startDate, endDate)
   const net = summary.totalIncome - summary.totalExpenses
-  const topTransactions = transactions.slice(0, 8)
-  const transactionRows = topTransactions.length > 0
-    ? topTransactions.map((transaction) => `
-        <tr>
-          <td style="padding:10px 12px;border-top:1px solid #e5e7eb;">${escapeHtml(formatPrettyDate(transaction.date))}</td>
-          <td style="padding:10px 12px;border-top:1px solid #e5e7eb;">${escapeHtml(transaction.category)}</td>
-          <td style="padding:10px 12px;border-top:1px solid #e5e7eb;text-align:right;font-family:monospace;">${transaction._type === 'income' ? '+' : '−'}${escapeHtml(formatCurrencyFull(transaction.amount))}</td>
-          <td style="padding:10px 12px;border-top:1px solid #e5e7eb;">${escapeHtml(transaction.note || '')}</td>
-        </tr>
-      `).join('')
-    : `
-        <tr>
-          <td colspan="4" style="padding:18px 12px;border-top:1px solid #e5e7eb;color:#6b7280;">No transactions were found in this range.</td>
-        </tr>
-      `
 
   const categoryRows = categories.length > 0
     ? `
@@ -236,18 +290,31 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
     <div style="margin:0;padding:0;background:#fafaf8;color:#111827;font-family:Arial,Helvetica,sans-serif;">
       <div style="max-width:760px;margin:0 auto;padding:24px;">
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:24px;box-shadow:0 12px 40px rgba(15,15,15,0.06);">
-          <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;">
-            <div>
-              <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:6px;">Transaction report</div>
-              <h1 style="margin:0;font-size:26px;line-height:1.2;color:#111827;">Your selected history</h1>
-              <p style="margin:8px 0 0;font-size:14px;color:#4b5563;">Prepared for ${escapeHtml(userName || 'you')} from ${escapeHtml(formatPrettyDate(startDate))} to ${escapeHtml(formatPrettyDate(endDate))}.</p>
-            </div>
-            <div style="font-size:12px;color:#6b7280;text-align:right;">
-              <div>${escapeHtml(transactions.length)} transactions</div>
-              <div>${escapeHtml(summary.expenseCount)} expenses</div>
-              <div>${escapeHtml(summary.incomeCount)} income entries</div>
-            </div>
-          </div>
+          <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;width:100%;">
+            <tr>
+              <td style="vertical-align:top;">
+                <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;margin-bottom:6px;">Transaction report</div>
+                <h1 style="margin:0;font-size:26px;line-height:1.2;color:#111827;">Your selected history</h1>
+                <p style="margin:8px 0 0;font-size:14px;color:#4b5563;">Prepared for ${escapeHtml(userName || 'you')} from ${escapeHtml(formatPrettyDate(startDate))} to ${escapeHtml(formatPrettyDate(endDate))}.</p>
+              </td>
+              <td style="vertical-align:top;text-align:right;white-space:nowrap;padding-left:12px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-left:auto;">
+                  <tr>
+                    <td style="font-size:12px;color:#6b7280;padding:0 8px 4px 0;">Transactions</td>
+                    <td style="font-size:12px;color:#111827;font-weight:700;text-align:right;padding:0 0 4px;">${escapeHtml(transactions.length)}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:12px;color:#6b7280;padding:0 8px 4px 0;">Expenses</td>
+                    <td style="font-size:12px;color:#111827;font-weight:700;text-align:right;padding:0 0 4px;">${escapeHtml(summary.expenseCount)}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:12px;color:#6b7280;padding:0 8px 0 0;">Income entries</td>
+                    <td style="font-size:12px;color:#111827;font-weight:700;text-align:right;padding:0;">${escapeHtml(summary.incomeCount)}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
 
           <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="margin-top:22px;border-collapse:separate;border-spacing:8px;">
             <tr>
@@ -286,24 +353,6 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
             ${categoryRows}
           </div>
 
-          <div style="margin-top:24px;">
-            <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:8px;">Recent Transactions</div>
-            <div style="border:1px solid #e5e7eb;border-radius:18px;overflow:hidden;">
-              <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;width:100%;font-size:13px;">
-                <thead>
-                  <tr style="background:#f9fafb;color:#6b7280;text-align:left;">
-                    <th style="padding:10px 12px;font-weight:600;">Date</th>
-                    <th style="padding:10px 12px;font-weight:600;">Category</th>
-                    <th style="padding:10px 12px;font-weight:600;text-align:right;">Amount</th>
-                    <th style="padding:10px 12px;font-weight:600;">Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${transactionRows}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
     </div>
