@@ -63,22 +63,19 @@ const buildDailyBuckets = (transactions, startDate, endDate) => {
   const start = new Date(`${startDate}T00:00:00`)
   const end = new Date(`${endDate}T00:00:00`)
   const totalDays = Math.max(1, Math.round((end - start) / DAY_MS) + 1)
-  const bucketSize = Math.max(1, Math.ceil(totalDays / 12))
   const buckets = []
 
-  for (let offset = 0; offset < totalDays; offset += bucketSize) {
-    const bucketStart = new Date(start)
-    bucketStart.setDate(bucketStart.getDate() + offset)
-    const bucketEnd = new Date(bucketStart)
-    bucketEnd.setDate(bucketEnd.getDate() + bucketSize - 1)
-    if (bucketEnd > end) bucketEnd.setTime(end.getTime())
+  for (let i = 0; i < totalDays; i++) {
+    const current = new Date(start)
+    current.setDate(start.getDate() + i)
+        const label = i % 5 === 0
+      ? current.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+      : ''
+
 
     buckets.push({
-      start: bucketStart,
-      end: bucketEnd,
-      label: bucketSize === 1
-        ? bucketStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-        : `${bucketStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${bucketEnd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`,
+      date: current,
+      label,
       income: 0,
       expenses: 0,
     })
@@ -86,12 +83,13 @@ const buildDailyBuckets = (transactions, startDate, endDate) => {
 
   transactions.forEach((transaction) => {
     const transactionDate = new Date(`${transaction.date}T00:00:00`)
-    const offset = Math.max(0, Math.min(totalDays - 1, Math.floor((transactionDate - start) / DAY_MS)))
-    const bucketIndex = Math.min(buckets.length - 1, Math.floor(offset / bucketSize))
-    const bucket = buckets[bucketIndex]
-    const amount = Number(transaction.amount) || 0
-    if (transaction._type === 'income') bucket.income += amount
-    else bucket.expenses += amount
+    const index = Math.floor((transactionDate - start) / DAY_MS)
+
+    if (index >= 0 && index < buckets.length) {
+      const amount = Number(transaction.amount) || 0
+      if (transaction._type === 'income') buckets[index].income += amount
+      else buckets[index].expenses += amount
+    }
   })
 
   return buckets
