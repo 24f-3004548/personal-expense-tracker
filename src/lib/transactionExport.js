@@ -68,10 +68,10 @@ const buildDailyBuckets = (transactions, startDate, endDate) => {
   for (let i = 0; i < totalDays; i++) {
     const current = new Date(start)
     current.setDate(start.getDate() + i)
-        const label = i % 5 === 0
+    // FIX (cosmetic): corrected indentation
+    const label = i % 5 === 0
       ? current.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
       : ''
-
 
     buckets.push({
       date: current,
@@ -112,11 +112,21 @@ const buildCategoryBreakdown = (transactions) => {
 const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
   const width = 600
   const maxPoints = 25
-  const step = Math.ceil(buckets.length / maxPoints)
+
+  // FIX 1: Guard against step=0 when buckets is empty or shorter than maxPoints.
+  // Math.ceil(0 / 25) = 0, causing i % 0 = NaN, so sampled would always be [].
+  const step = Math.max(1, Math.ceil(buckets.length / maxPoints))
 
   const sampled = buckets.filter((_, i) => i % step === 0)
 
-  const labels = sampled.map(b => b.label)
+  // FIX 2: b.label is '' for 4 out of every 5 days (set only at i%5===0 in
+  // buildDailyBuckets). When step doesn't align with that 5-day cadence, all
+  // sampled labels are empty strings, producing a completely blank x-axis.
+  // Fall back to a formatted date string so every sampled tick is labelled.
+  const labels = sampled.map(b =>
+    b.label || b.date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+  )
+
   const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
   const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
 
@@ -175,6 +185,10 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
         },
         y1: {
           position: 'left',
+          // FIX 3: incomeMax was computed but never wired into the scale, so
+          // Chart.js auto-scaled y1 independently. Use suggestedMax so the
+          // axis ceiling matches the legend header value shown below the chart.
+          suggestedMax: incomeMax,
           ticks: {
             color: '#16a34a',
             font: { size: 9 }
@@ -185,6 +199,8 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
         },
         y2: {
           position: 'right',
+          // FIX 3 (continued): same issue for the expense axis.
+          suggestedMax: expenseMax,
           ticks: {
             color: '#111827',
             font: { size: 9 }
@@ -197,7 +213,11 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
     }
   }
 
-  const chartUrl = `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`
+  // FIX 4: chartUrl was embedded raw into an HTML attribute. escapeHtml
+  // ensures any stray characters are properly encoded for the attribute context.
+  const chartUrl = escapeHtml(
+    `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`
+  )
 
   const chart = `
     <img 
