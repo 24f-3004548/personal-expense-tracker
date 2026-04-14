@@ -82,7 +82,7 @@ export default function ExportHistory() {
     setExportError('')
 
     try {
-      const html = buildTransactionReportHtml({
+      const html = await buildTransactionReportHtml({
         userName: user?.user_metadata?.name || user?.email?.split('@')[0] || 'You',
         startDate,
         endDate,

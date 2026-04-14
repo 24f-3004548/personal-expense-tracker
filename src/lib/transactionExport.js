@@ -109,7 +109,31 @@ const buildCategoryBreakdown = (transactions) => {
     .sort((a, b) => b.amount - a.amount)
 }
 
-const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
+const getChartUrl = async (chartConfig) => {
+  const response = await fetch('https://quickchart.io/chart/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chart: chartConfig,
+      width: 600,
+      height: 300,
+      backgroundColor: 'white',
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`QuickChart create failed (${response.status})`)
+  }
+
+  const payload = await response.json()
+  if (!payload?.url) {
+    throw new Error('QuickChart create did not return a URL')
+  }
+
+  return payload.url
+}
+
+const buildDualAxisLineChartBlock = async (title, subtitle, buckets) => {
   const width = 600
   const maxPoints = 25
 
@@ -213,20 +237,21 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
     }
   }
 
-  // FIX 4: chartUrl was embedded raw into an HTML attribute. escapeHtml
-  // ensures any stray characters are properly encoded for the attribute context.
-  const chartUrl = escapeHtml(
-    `https://quickchart.io/chart?c=${encodeURIComponent(JSON.stringify(chartConfig))}`
-  )
-
-  const chart = `
-    <img 
-      src="${chartUrl}" 
-      width="${width}" 
-      style="display:block;margin-top:16px;border-radius:8px;"
-      alt="Cash flow chart"
-    />
-  `
+  let chart = ''
+  try {
+    const chartUrl = await getChartUrl(chartConfig)
+    chart = `
+      <img
+        src="${escapeHtml(chartUrl)}"
+        width="${width}"
+        style="display:block;margin-top:16px;border-radius:8px;"
+        alt="Cash flow chart"
+      />
+    `
+  } catch (error) {
+    console.error('Unable to create QuickChart short URL:', error)
+    chart = '<div style="margin-top:16px;font-size:12px;color:#6b7280;">Chart unavailable in this email send. Please check the app preview for chart details.</div>'
+  }
 
   return `
     <div style="margin-top:24px;">
@@ -251,11 +276,16 @@ const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
   `
 }
 
-export const buildTransactionReportHtml = ({ userName, startDate, endDate, transactions }) => {
+export const buildTransactionReportHtml = async ({ userName, startDate, endDate, transactions }) => {
   const summary = buildTransactionSummary(transactions)
   const categories = buildCategoryBreakdown(transactions).slice(0, 6)
   const buckets = buildDailyBuckets(transactions, startDate, endDate)
   const net = summary.totalIncome - summary.totalExpenses
+  const chartBlock = await buildDualAxisLineChartBlock(
+    'Cash flow by range',
+    'Income and expenses grouped across the selected period.',
+    buckets,
+  )
 
   const categoryRows = categories.length > 0
     ? `
@@ -351,11 +381,7 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
             </tr>
           </table>
 
-          ${buildDualAxisLineChartBlock(
-            'Cash flow by range',
-            'Income and expenses grouped across the selected period.',
-            buckets,
-          )}
+          ${chartBlock}
 
           <div style="margin-top:24px;">
             <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:4px;">Expense breakdown</div>
