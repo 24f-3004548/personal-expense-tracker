@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import { formatCurrencyFull, getCategoryMeta } from './supabase'
+import { version } from 'react'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -120,6 +121,7 @@ const getChartUrl = async (chartConfig) => {
       height: 300,
       backgroundColor: 'white',
       format: 'png',
+      version: '4',
     }),
   })
 
