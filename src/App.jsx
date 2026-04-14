@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Transactions from './pages/Transactions'
 import Budget from './pages/Budget'
 import Review from './pages/Review'
+import ExportHistory from './pages/ExportHistory'
 
 function ProtectedRoutes() {
   const { user, loading } = useAuth()
@@ -27,6 +28,7 @@ function ProtectedRoutes() {
         <Route path="/expenses" element={<Transactions />} />
         <Route path="/budget" element={<Budget />} />
         <Route path="/review" element={<Review />} />
+        <Route path="/export-history" element={<ExportHistory />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </AppLayout>

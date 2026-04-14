@@ -117,6 +117,44 @@ export const deleteIncome = async (id) => {
   if (error) throw error
 }
 
+export const getTransactionsInRange = async (userId, startDate, endDate) => {
+  const [expenses, income] = await Promise.all([
+    supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('income')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', startDate)
+      .lte('date', endDate)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false }),
+  ])
+
+  if (expenses.error) throw expenses.error
+  if (income.error) throw income.error
+
+  return [
+    ...expenses.data.map((item) => ({ ...item, _type: 'expense' })),
+    ...income.data.map((item) => ({
+      ...item,
+      _type: 'income',
+      category: 'Income',
+      note: item.note || 'Income',
+    })),
+  ].sort((a, b) => {
+    const aTime = new Date(a.created_at || `${a.date}T00:00:00`).getTime()
+    const bTime = new Date(b.created_at || `${b.date}T00:00:00`).getTime()
+    return bTime - aTime
+  })
+}
+
 // ─── Budget helpers ────────────────────────────────────────────
 export const getBudget = async (userId, month, year) => {
   const { data, error } = await supabase

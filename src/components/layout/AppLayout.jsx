@@ -7,6 +7,7 @@ const NAV = [
   { to: '/expenses', label: 'Transactions', icon: '↕' },
   { to: '/budget', label: 'Budget', icon: '◎' },
   { to: '/review', label: 'Review', icon: '◈' },
+  { to: '/export-history', label: 'Export History', icon: '⇪' },
 ]
 
 export default function AppLayout({ children }) {
