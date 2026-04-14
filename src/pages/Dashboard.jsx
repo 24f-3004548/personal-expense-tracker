@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   getDashboardData, getMonthlyTrend, formatCurrency, formatCurrencyFull,
-  formatDate, formatTime, getCategoryMeta, MONTH_NAMES, SHORT_MONTHS
+  formatDate, formatTime, getCategoryMeta, MONTH_NAMES
 } from '../lib/supabase'
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid
+  Tooltip
 } from 'recharts'
 import QuickAdd from '../components/expenses/QuickAdd'
 import AddIncomeModal from '../components/income/AddIncomeModal'
@@ -74,21 +74,6 @@ export default function Dashboard() {
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
         <span>{meta.icon} {name}</span>
         <span className="ml-2 font-mono font-medium">{formatCurrencyFull(amount)}</span>
-      </div>
-    )
-  }
-
-  const BarTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null
-    return (
-      <div className="px-3 py-2 rounded-lg shadow-sm border text-xs"
-        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <p className="mb-1" style={{ color: 'var(--ink-3)' }}>{label}</p>
-        {payload.map(p => (
-          <p key={p.name} style={{ color: p.name === 'expenses' ? 'var(--ink)' : 'var(--green)' }}>
-            {p.name === 'expenses' ? 'Spent' : 'Earned'}: {formatCurrency(p.value)}
-          </p>
-        ))}
       </div>
     )
   }
@@ -298,35 +283,6 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-
-      {/* 6-month trend bar chart */}
-      {trend.length > 0 && (
-        <div className="rounded-xl border p-4 mb-6 animate-fade-up stagger-4"
-          style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-          <div className="flex items-baseline justify-between mb-4">
-            <p className="text-xs" style={{ color: 'var(--ink-4)' }}>6-month overview</p>
-            <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
-              <span style={{ color: 'var(--ink)' }}>▪</span> Spent &nbsp;
-              <span style={{ color: 'var(--green)' }}>▪</span> Earned
-            </p>
-          </div>
-          <ResponsiveContainer width="100%" height={120}>
-            <BarChart data={trend.map(t => ({
-              name: SHORT_MONTHS[t.month],
-              expenses: t.expenses,
-              income: t.income,
-            }))} barGap={2} barSize={12}>
-              <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false}
-                tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }} />
-              <YAxis hide />
-              <Tooltip content={<BarTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
-              <Bar dataKey="expenses" fill="var(--ink)" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="income" fill="var(--green)" radius={[3, 3, 0, 0]} opacity={0.6} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
 
       {/* Recent transactions */}
       {recentTransactions.length > 0 && (

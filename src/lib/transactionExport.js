@@ -111,8 +111,30 @@ const buildCategoryBreakdown = (transactions) => {
     .sort((a, b) => b.amount - a.amount)
 }
 
-const buildChartBlock = (title, subtitle, buckets, primaryKey, secondaryKey, primaryLabel, secondaryLabel, primaryColor, secondaryColor) => {
-  const maxValue = Math.max(1, ...buckets.map((bucket) => Math.max(Number(bucket[primaryKey]) || 0, Number(bucket[secondaryKey]) || 0)))
+const buildDualAxisLineChartBlock = (title, subtitle, buckets) => {
+  const chartWidth = 680
+  const chartHeight = 220
+  const topPad = 18
+  const bottomPad = 24
+  const sidePad = 26
+  const incomeMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.income) || 0))
+  const expenseMax = Math.max(1, ...buckets.map((bucket) => Number(bucket.expenses) || 0))
+  const steps = Math.max(1, buckets.length - 1)
+
+  const incomePoints = buckets.map((bucket, index) => {
+    const x = sidePad + ((chartWidth - sidePad * 2) * index) / steps
+    const y = topPad + ((chartHeight - topPad - bottomPad) * (1 - (Number(bucket.income) || 0) / incomeMax))
+    return { x, y, label: bucket.label }
+  })
+
+  const expensePoints = buckets.map((bucket, index) => {
+    const x = sidePad + ((chartWidth - sidePad * 2) * index) / steps
+    const y = topPad + ((chartHeight - topPad - bottomPad) * (1 - (Number(bucket.expenses) || 0) / expenseMax))
+    return { x, y, label: bucket.label }
+  })
+
+  const incomePath = incomePoints.map((point) => `${point.x},${point.y}`).join(' ')
+  const expensePath = expensePoints.map((point) => `${point.x},${point.y}`).join(' ')
 
   return `
     <div style="margin-top:24px;">
@@ -121,22 +143,36 @@ const buildChartBlock = (title, subtitle, buckets, primaryKey, secondaryKey, pri
           <div style="font-size:16px;font-weight:700;color:#111827;">${escapeHtml(title)}</div>
           <div style="font-size:12px;color:#6b7280;margin-top:2px;">${escapeHtml(subtitle)}</div>
         </div>
-        <div style="font-size:12px;color:#6b7280;white-space:nowrap;">${escapeHtml(primaryLabel)} / ${escapeHtml(secondaryLabel)}</div>
+        <div style="font-size:12px;color:#6b7280;white-space:nowrap;">Dual axis</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(${buckets.length},minmax(0,1fr));gap:10px;align-items:end;min-height:220px;">
-        ${buckets.map((bucket) => {
-          const primaryHeight = Math.max(4, Math.round(((Number(bucket[primaryKey]) || 0) / maxValue) * 150))
-          const secondaryHeight = Math.max(4, Math.round(((Number(bucket[secondaryKey]) || 0) / maxValue) * 150))
-          return `
-            <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;">
-              <div style="display:flex;align-items:flex-end;gap:4px;height:160px;width:100%;justify-content:center;">
-                <div title="${escapeHtml(primaryLabel)}" style="width:18px;height:${primaryHeight}px;background:${primaryColor};border-radius:999px 999px 4px 4px;"></div>
-                <div title="${escapeHtml(secondaryLabel)}" style="width:18px;height:${secondaryHeight}px;background:${secondaryColor};border-radius:999px 999px 4px 4px;opacity:0.85;"></div>
-              </div>
-              <div style="font-size:11px;line-height:1.2;color:#6b7280;text-align:center;word-break:break-word;">${escapeHtml(bucket.label)}</div>
-            </div>
-          `
-        }).join('')}
+
+      <div style="border:1px solid #e5e7eb;border-radius:16px;padding:12px;">
+        <div style="display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#6b7280;margin-bottom:6px;">
+          <span>Income max: ${escapeHtml(formatCurrencyFull(incomeMax))}</span>
+          <span>Expenses max: ${escapeHtml(formatCurrencyFull(expenseMax))}</span>
+        </div>
+
+        <svg viewBox="0 0 ${chartWidth} ${chartHeight}" width="100%" height="220" role="img" aria-label="Income and expenses line chart">
+          ${[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+            const y = topPad + (chartHeight - topPad - bottomPad) * ratio
+            return `<line x1="${sidePad}" x2="${chartWidth - sidePad}" y1="${y}" y2="${y}" stroke="#e5e7eb" stroke-dasharray="4 4" />`
+          }).join('')}
+
+          <polyline fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${incomePath}" />
+          <polyline fill="none" stroke="#111827" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${expensePath}" />
+
+          ${incomePoints.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="4" fill="#16a34a" />`).join('')}
+          ${expensePoints.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="4" fill="#111827" />`).join('')}
+        </svg>
+
+        <div style="display:grid;grid-template-columns:repeat(${buckets.length},minmax(0,1fr));gap:8px;margin-top:4px;">
+          ${buckets.map((bucket) => `<div style="font-size:10px;line-height:1.2;color:#6b7280;text-align:center;">${escapeHtml(bucket.label)}</div>`).join('')}
+        </div>
+
+        <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:12px;color:#6b7280;">
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:999px;background:#16a34a;display:inline-block;"></span>Income</span>
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:999px;background:#111827;display:inline-block;"></span>Expenses</span>
+        </div>
       </div>
     </div>
   `
@@ -164,20 +200,29 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
       `
 
   const categoryRows = categories.length > 0
-    ? categories.map((category) => {
-        const percent = summary.totalExpenses > 0 ? Math.round((category.amount / summary.totalExpenses) * 100) : 0
-        return `
-          <div style="margin-bottom:12px;">
-            <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;">
-              <span style="font-size:13px;color:#111827;">${escapeHtml(category.icon)} ${escapeHtml(category.name)}</span>
-              <span style="font-size:12px;font-family:monospace;color:#4b5563;">${escapeHtml(formatCurrencyFull(category.amount))} · ${percent}%</span>
+    ? `
+      <div style="height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;display:flex;">
+        ${categories.map((category) => {
+          const percent = summary.totalExpenses > 0 ? (category.amount / summary.totalExpenses) * 100 : 0
+          return `<span title="${escapeHtml(category.name)}" style="height:100%;width:${Math.max(percent, 1)}%;background:${category.color};display:block;"></span>`
+        }).join('')}
+      </div>
+
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+        ${categories.map((category) => {
+          const percent = summary.totalExpenses > 0 ? Math.round((category.amount / summary.totalExpenses) * 100) : 0
+          return `
+            <div style="border:1px solid #e5e7eb;border-radius:10px;padding:8px 10px;display:flex;justify-content:space-between;gap:10px;align-items:center;">
+              <span style="font-size:12px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                <span style="width:8px;height:8px;border-radius:999px;background:${category.color};display:inline-block;margin-right:6px;"></span>
+                ${escapeHtml(category.icon)} ${escapeHtml(category.name)}
+              </span>
+              <span style="font-size:11px;font-family:monospace;color:#4b5563;white-space:nowrap;">${escapeHtml(formatCurrencyFull(category.amount))} · ${percent}%</span>
             </div>
-            <div style="height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
-              <div style="height:100%;width:${Math.max(percent, 1)}%;background:${category.color};border-radius:999px;"></div>
-            </div>
-          </div>
-        `
-      }).join('')
+          `
+        }).join('')}
+      </div>
+    `
     : '<div style="font-size:13px;color:#6b7280;">No expense categories in this range.</div>'
 
   return `
@@ -211,16 +256,10 @@ export const buildTransactionReportHtml = ({ userName, startDate, endDate, trans
             `).join('')}
           </div>
 
-          ${buildChartBlock(
+          ${buildDualAxisLineChartBlock(
             'Cash flow by range',
             'Income and expenses grouped across the selected period.',
             buckets,
-            'income',
-            'expenses',
-            'Income',
-            'Expenses',
-            '#16a34a',
-            '#111827',
           )}
 
           <div style="margin-top:24px;">
@@ -257,12 +296,15 @@ export const buildTransactionWorkbookBase64 = async (transactions, startDate, en
   const xlsxModule = await import('xlsx')
   const XLSX = xlsxModule.default ?? xlsxModule
 
-  const rows = transactions.map((transaction) => ({
-    Date: transaction.date,
-    Category: transaction.category,
-    Amount: Number(transaction.amount) || 0,
-    Notes: transaction.note || '',
-  }))
+  const transactionRows = [
+    ['Date', 'Category', 'Amount', 'Notes'],
+    ...transactions.map((transaction) => ([
+      transaction.date,
+      transaction.category,
+      Number(transaction.amount) || 0,
+      transaction.note || '',
+    ])),
+  ]
 
   const summaryRows = [
     ['Field', 'Value'],
@@ -274,11 +316,11 @@ export const buildTransactionWorkbookBase64 = async (transactions, startDate, en
   ]
 
   const workbook = XLSX.utils.book_new()
+  const transactionsSheet = XLSX.utils.aoa_to_sheet(transactionRows)
   const summarySheet = XLSX.utils.aoa_to_sheet(summaryRows)
-  const transactionsSheet = XLSX.utils.json_to_sheet(rows)
 
-  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary')
   XLSX.utils.book_append_sheet(workbook, transactionsSheet, 'Transactions')
+  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary')
 
   return XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' })
 }

@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
-  getDashboardData, getCategoryMeta, formatCurrencyFull, formatDate, MONTH_NAMES
+  getDashboardData, getMonthlyTrend, getCategoryMeta, formatCurrency, formatCurrencyFull, formatDate, MONTH_NAMES, SHORT_MONTHS
 } from '../lib/supabase'
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+} from 'recharts'
 
 const now = new Date()
 
@@ -14,17 +17,20 @@ export default function Review() {
   const [compareYear, setCompareYear] = useState(now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear())
   const [data, setData] = useState(null)
   const [prevData, setPrevData] = useState(null)
+  const [trend, setTrend] = useState([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [curr, prev] = await Promise.all([
+      const [curr, prev, trendData] = await Promise.all([
         getDashboardData(user.id, month, year),
         getDashboardData(user.id, compareMonth, compareYear),
+        getMonthlyTrend(user.id),
       ])
       setData(curr)
       setPrevData(prev)
+      setTrend(trendData)
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
   }, [user.id, month, year, compareMonth, compareYear])
@@ -113,6 +119,46 @@ export default function Review() {
     insights.push({ icon: '!', text: `Spent ${formatCurrencyFull(Math.abs(data.savings))} more than earned`, positive: false })
   }
 
+  const categoryShiftRows = (() => {
+    if (!data?.categoryBreakdown || !prevData?.categoryBreakdown) return []
+
+    const currentMap = new Map(data.categoryBreakdown.map((cat) => [cat.name, Number(cat.amount) || 0]))
+    const previousMap = new Map(prevData.categoryBreakdown.map((cat) => [cat.name, Number(cat.amount) || 0]))
+    const names = Array.from(new Set([...currentMap.keys(), ...previousMap.keys()]))
+
+    return names
+      .map((name) => {
+        const currentAmount = currentMap.get(name) || 0
+        const previousAmount = previousMap.get(name) || 0
+        return {
+          name,
+          currentAmount,
+          previousAmount,
+          delta: currentAmount - previousAmount,
+        }
+      })
+      .filter((row) => row.currentAmount > 0 || row.previousAmount > 0)
+      .sort((a, b) => Math.max(b.currentAmount, b.previousAmount) - Math.max(a.currentAmount, a.previousAmount))
+      .slice(0, 6)
+  })()
+
+  const barMax = Math.max(1, ...categoryShiftRows.map((row) => Math.max(row.currentAmount, row.previousAmount)))
+
+  const TrendTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null
+    return (
+      <div className="px-3 py-2 rounded-lg shadow-sm border text-xs"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <p className="mb-1" style={{ color: 'var(--ink-3)' }}>{label}</p>
+        {payload.map((entry) => (
+          <p key={entry.name} style={{ color: entry.name === 'expenses' ? 'var(--ink)' : 'var(--green)' }}>
+            {entry.name === 'expenses' ? 'Spent' : 'Earned'}: {formatCurrency(entry.value)}
+          </p>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
       {/* Header */}
@@ -166,9 +212,38 @@ export default function Review() {
             </div>
           )}
 
+          {/* 6-month overview */}
+          {trend.length > 0 && (
+            <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-3"
+              style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+              <div className="flex items-baseline justify-between mb-4">
+                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>6-month overview</p>
+                <p className="text-xs" style={{ color: 'var(--ink-4)' }}>
+                  <span style={{ color: 'var(--ink)' }}>▪</span> Spent &nbsp;
+                  <span style={{ color: 'var(--green)' }}>▪</span> Earned
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={130}>
+                <BarChart data={trend.map((t) => ({
+                  name: SHORT_MONTHS[t.month],
+                  expenses: t.expenses,
+                  income: t.income,
+                }))} barGap={2} barSize={12}>
+                  <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false}
+                    tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }} />
+                  <YAxis hide />
+                  <Tooltip content={<TrendTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
+                  <Bar dataKey="expenses" fill="var(--ink)" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="income" fill="var(--green)" radius={[3, 3, 0, 0]} opacity={0.6} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
           {/* vs last month */}
           {prevData && (
-            <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-3"
+            <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-4"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <p className="text-xs" style={{ color: 'var(--ink-4)' }}>Compare to</p>
@@ -191,17 +266,22 @@ export default function Review() {
                         label: 'Spending',
                         curr: data?.totalExpenses,
                         prev: prevData?.totalExpenses,
-                        lowerBetter: true,
+                        mode: 'spending',
                       },
                       {
                         label: 'Savings',
                         curr: data?.savings,
                         prev: prevData?.savings,
-                        lowerBetter: false,
+                        mode: 'savings',
                       },
                     ].map(row => {
-                      const delta = row.prev ? ((row.curr - row.prev) / Math.abs(row.prev)) * 100 : null
-                      const isPositive = row.lowerBetter ? delta <= 0 : delta >= 0
+                      const hasPrev = row.prev !== undefined && row.prev !== null
+                      const deltaAmount = hasPrev ? (row.curr - row.prev) : null
+                      const increaseIsBad = row.mode === 'spending'
+                      const deltaColor = deltaAmount === null || deltaAmount === 0
+                        ? 'var(--ink-4)'
+                        : ((deltaAmount > 0) === increaseIsBad ? 'var(--red)' : 'var(--green)')
+
                       return (
                         <div key={row.label} className="flex justify-between items-center">
                           <span className="text-sm" style={{ color: 'var(--ink-3)' }}>{row.label}</span>
@@ -209,9 +289,10 @@ export default function Review() {
                             <span className="text-sm font-mono" style={{ color: 'var(--ink)' }}>
                               {formatCurrencyFull(row.curr)}
                             </span>
-                            {delta !== null && (
-                              <span className="text-xs font-mono" style={{ color: isPositive ? 'var(--green)' : 'var(--red)' }}>
-                                {delta > 0 ? '+' : ''}{delta.toFixed(0)}%
+                            {deltaAmount !== null && (
+                              <span className="text-xs font-mono" style={{ color: deltaColor }}>
+                                {deltaAmount > 0 ? '+' : deltaAmount < 0 ? '−' : ''}
+                                {formatCurrencyFull(Math.abs(deltaAmount))}
                               </span>
                             )}
                           </div>
@@ -221,28 +302,45 @@ export default function Review() {
                   </div>
 
                   {/* Category comparison */}
-                  {data?.categoryBreakdown?.length > 0 && (
+                  {categoryShiftRows.length > 0 && (
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                       <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Category shifts</p>
-                      {data.categoryBreakdown.slice(0, 4).map(cat => {
-                        const prevCat = prevData?.categoryBreakdown?.find(c => c.name === cat.name)
-                        const catDelta = prevCat ? cat.amount - prevCat.amount : null
-                        const meta = getCategoryMeta(cat.name)
+
+                      <div className="flex items-center gap-3 text-[10px] mb-3" style={{ color: 'var(--ink-4)' }}>
+                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink)' }} />{MONTH_NAMES[month]}</span>
+                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink-4)' }} />{MONTH_NAMES[compareMonth]}</span>
+                      </div>
+
+                      {categoryShiftRows.map((row) => {
+                        const meta = getCategoryMeta(row.name)
+                        const currentPct = (row.currentAmount / barMax) * 100
+                        const previousPct = (row.previousAmount / barMax) * 100
+                        const deltaColor = row.delta > 0 ? 'var(--red)' : row.delta < 0 ? 'var(--green)' : 'var(--ink-4)'
+
                         return (
-                          <div key={cat.name} className="flex items-center justify-between py-1.5">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm">{meta.icon}</span>
-                              <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{cat.name}</span>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-xs font-mono" style={{ color: 'var(--ink)' }}>
-                                {formatCurrencyFull(cat.amount)}
-                              </span>
-                              {catDelta !== null && (
-                                <span className="text-xs" style={{ color: catDelta > 0 ? 'var(--red)' : 'var(--green)' }}>
-                                  {catDelta > 0 ? '+' : ''}{formatCurrencyFull(catDelta)}
+                          <div key={row.name} className="py-2.5">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">{meta.icon}</span>
+                                <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{row.name}</span>
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-xs font-mono" style={{ color: 'var(--ink)' }}>
+                                  {formatCurrencyFull(row.currentAmount)}
                                 </span>
-                              )}
+                                <span className="text-xs font-mono" style={{ color: deltaColor }}>
+                                  {row.delta > 0 ? '+' : row.delta < 0 ? '−' : ''}{formatCurrencyFull(Math.abs(row.delta))}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
+                                <div className="h-full rounded-full" style={{ width: `${Math.max(1, currentPct)}%`, background: 'var(--ink)' }} />
+                              </div>
+                              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--surface-3)' }}>
+                                <div className="h-full rounded-full" style={{ width: `${Math.max(1, previousPct)}%`, background: 'var(--ink-4)' }} />
+                              </div>
                             </div>
                           </div>
                         )
@@ -256,7 +354,7 @@ export default function Review() {
 
           {/* Largest expense */}
           {largestExpense && (
-            <div className="rounded-xl border p-4 animate-fade-up stagger-4"
+            <div className="rounded-xl border p-4 animate-fade-up stagger-5"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
               <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Largest single expense</p>
               <div className="flex items-center gap-3">
