@@ -77,11 +77,11 @@ const buildQuickRanges = (now) => {
   ]
 }
 
-const formatLongDate = (dateStr) => new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-IN', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-})
+const formatDisplayDate = (dateStr) => {
+  const [year, month, day] = String(dateStr || '').split('-')
+  if (!year || !month || !day) return dateStr
+  return `${day}/${month}/${year}`
+}
 
 export default function ExportHistory() {
   const { user } = useAuth()
@@ -202,7 +202,7 @@ export default function ExportHistory() {
       const { data, error: fnError } = await supabase.functions.invoke('resend-email', {
         body: {
           to: user.email,
-          subject: 'Transaction Report - ' + formatLongDate(startDate) + ' to ' + formatLongDate(endDate),
+          subject: 'Transaction Report - ' + formatDisplayDate(startDate) + ' to ' + formatDisplayDate(endDate),
           html,
           attachments: [
             {
@@ -233,7 +233,14 @@ export default function ExportHistory() {
         <span className="text-xs truncate max-w-[180px]" style={{ color: 'var(--ink-4)' }}>{user?.email || 'No email available'}</span>
       </div>
 
-      <div className="rounded-2xl border p-4 mb-4 animate-fade-up stagger-1" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+      <div
+        className="rounded-2xl border p-4 mb-4 animate-fade-up stagger-1 relative"
+        style={{
+          borderColor: 'var(--border)',
+          background: 'var(--surface)',
+          zIndex: isQuickRangeOpen ? 20 : 'auto',
+        }}
+      >
         <div className="flex items-center justify-between gap-2 mb-3">
           <p className="text-xs uppercase tracking-[0.16em]" style={{ color: 'var(--ink-4)' }}>Date range</p>
           <div className="relative" ref={quickRangeRef}>
@@ -276,7 +283,7 @@ export default function ExportHistory() {
                     >
                       <div>{range.label}</div>
                       <div className="text-xs font-mono" style={{ color: 'var(--ink-4)' }}>
-                        {range.startDate} - {range.endDate}
+                        {formatDisplayDate(range.startDate)} - {formatDisplayDate(range.endDate)}
                       </div>
                     </button>
                   )
@@ -317,7 +324,7 @@ export default function ExportHistory() {
       <div className="rounded-2xl border p-4 animate-fade-up stagger-2" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
         <div className="flex items-baseline justify-between gap-2 mb-4">
           <h2 className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-            {formatLongDate(startDate)} - {formatLongDate(endDate)}
+            {formatDisplayDate(startDate)} - {formatDisplayDate(endDate)}
           </h2>
           <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>{summary.transactionCount} total</span>
         </div>
