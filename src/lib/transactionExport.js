@@ -133,6 +133,7 @@ const getChartUrl = async (chartConfig) => {
   if (!payload?.url) {
     throw new Error('QuickChart create did not return a URL')
   }
+  console.log(payload.url)
   return payload.url
 }
 
