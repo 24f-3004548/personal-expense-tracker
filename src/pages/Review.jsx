@@ -181,7 +181,7 @@ export default function Review() {
     )
   }
 
-  const categoryShiftChartHeight = Math.max(190, categoryShiftRows.length * 48)
+  const categoryShiftChartHeight = 240
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
@@ -358,29 +358,31 @@ export default function Review() {
                               currentAmount: row.currentAmount,
                               previousAmount: row.previousAmount,
                             }))}
-                            layout="vertical"
-                            barGap={6}
-                            barCategoryGap={18}
+                            barGap={4}
+                            barCategoryGap={22}
                           >
-                            <CartesianGrid horizontal={false} stroke="var(--border)" strokeDasharray="0" />
+                            <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
                             <XAxis
-                              type="number"
+                              type="category"
+                              dataKey="name"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }}
+                              interval={0}
+                              angle={-18}
+                              textAnchor="end"
+                              height={58}
+                            />
+                            <YAxis
+                              yAxisId={0}
                               axisLine={false}
                               tickLine={false}
                               tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }}
                               tickFormatter={(value) => formatCurrency(value)}
                             />
-                            <YAxis
-                              type="category"
-                              dataKey="name"
-                              width={88}
-                              axisLine={false}
-                              tickLine={false}
-                              tick={{ fontSize: 11, fill: 'var(--ink-3)' }}
-                            />
                             <Tooltip content={<CategoryShiftTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
-                            <Bar dataKey="currentAmount" name={currentMonthLabel} fill="var(--ink)" radius={[0, 4, 4, 0]} />
-                            <Bar dataKey="previousAmount" name={compareMonthLabel} fill="var(--ink-4)" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="currentAmount" name={currentMonthLabel} fill="var(--ink)" radius={[4, 4, 0, 0]} yAxisId={0} />
+                            <Bar dataKey="previousAmount" name={compareMonthLabel} fill="var(--ink-4)" radius={[4, 4, 0, 0]} yAxisId={0} />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
