@@ -284,7 +284,7 @@ export default function ExportHistory() {
                     >
                       <div>{range.label}</div>
                       <div className="text-xs font-mono" style={{ color: 'var(--ink-4)' }}>
-                        {formatDisplayDate(range.startDate)} - {formatDisplayDate(range.endDate)}
+                        <p className="text-xs uppercase tracking-[0.16em]" style={{ color: 'var(--ink-4)' }}>Quick Summary</p>
                       </div>
                     </button>
                   )
