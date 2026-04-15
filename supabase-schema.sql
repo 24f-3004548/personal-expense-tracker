@@ -1,9 +1,6 @@
 -- ─────────────────────────────────────────────────────────────
 -- Spendly — Supabase Schema
--- Run this in your Supabase SQL Editor
 -- ─────────────────────────────────────────────────────────────
-
--- Enable UUID extension (usually already enabled)
 create extension if not exists "uuid-ossp";
 
 -- ─── Expenses ────────────────────────────────────────────────
@@ -83,6 +80,24 @@ create policy "Users insert own budgets"
 
 create policy "Users update own budgets"
   on budgets for update using (auth.uid() = user_id);
+
+-- ─── Email preferences ───────────────────────────────────────
+create table if not exists user_email_preferences (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  monthly_report_enabled boolean not null default false,
+  created_at timestamptz default now()
+);
+
+alter table user_email_preferences enable row level security;
+
+create policy "Users see own email preferences"
+  on user_email_preferences for select using (auth.uid() = user_id);
+
+create policy "Users insert own email preferences"
+  on user_email_preferences for insert with check (auth.uid() = user_id);
+
+create policy "Users update own email preferences"
+  on user_email_preferences for update using (auth.uid() = user_id);
 
 -- ─── Done ────────────────────────────────────────────────────
 -- No further setup needed. Supabase Auth handles user accounts.

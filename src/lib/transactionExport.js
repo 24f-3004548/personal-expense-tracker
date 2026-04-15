@@ -1,4 +1,4 @@
-import { formatCurrencyFull, getCategoryMeta } from './supabase'
+import { formatCurrencyFull, getCategoryMeta } from './reportFormatters'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

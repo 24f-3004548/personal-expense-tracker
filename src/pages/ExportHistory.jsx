@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { formatCurrencyFull, getTransactionsInRange, supabase } from '../lib/supabase'
 import { buildTransactionReportHtml, buildTransactionWorkbookBase64 } from '../lib/transactionExport'
+import { getPreviousMonthRange } from '../lib/reportPeriods'
 import DateInput from '../components/DateInput'
 
 const today = new Date()
@@ -42,6 +43,7 @@ const getCurrentFinancialYearRange = (now) => {
 const buildQuickRanges = (now) => {
   const end = normalizeDate(now)
   const currentMonthStart = new Date(end.getFullYear(), end.getMonth(), 1)
+  const previousMonth = getPreviousMonthRange(end)
 
   return [
     {
@@ -49,6 +51,11 @@ const buildQuickRanges = (now) => {
       label: 'Current month',
       startDate: toInputDate(currentMonthStart),
       endDate: toInputDate(end),
+    },
+    {
+      id: 'previous-month',
+      label: 'Previous month',
+      ...previousMonth,
     },
     {
       id: 'last-1-month',
@@ -92,9 +99,12 @@ export default function ExportHistory() {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+  const [reportEnabled, setReportEnabled] = useState(false)
+  const [savingReportPreference, setSavingReportPreference] = useState(false)
   const [message, setMessage] = useState('')
   const [loadError, setLoadError] = useState('')
   const [exportError, setExportError] = useState('')
+  const [preferenceError, setPreferenceError] = useState('')
   const quickRangeRef = useRef(null)
 
   const quickRanges = useMemo(() => buildQuickRanges(new Date()), [])
@@ -161,6 +171,42 @@ export default function ExportHistory() {
     }
   }, [user?.id, startDate, endDate])
 
+  useEffect(() => {
+    if (!user?.id) {
+      setReportEnabled(false)
+      setPreferenceError('')
+      return
+    }
+
+    let active = true
+
+    const loadPreference = async () => {
+      setPreferenceError('')
+      try {
+        const { data, error } = await supabase
+          .from('user_email_preferences')
+          .select('monthly_report_enabled')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (error) throw error
+        if (active) setReportEnabled(Boolean(data?.monthly_report_enabled))
+      } catch (requestError) {
+        console.error(requestError)
+        if (active) {
+          setReportEnabled(false)
+          setPreferenceError('Unable to load monthly report preference right now.')
+        }
+      }
+    }
+
+    loadPreference()
+
+    return () => {
+      active = false
+    }
+  }, [user?.id])
+
   const summary = useMemo(() => {
     const totalIncome = transactions.filter((transaction) => transaction._type === 'income').reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0)
     const totalExpenses = transactions.filter((transaction) => transaction._type === 'expense').reduce((sum, transaction) => sum + Number(transaction.amount || 0), 0)
@@ -182,6 +228,31 @@ export default function ExportHistory() {
     setStartDate(range.startDate)
     setEndDate(range.endDate)
     setIsQuickRangeOpen(false)
+  }
+
+  const handleReportToggle = async () => {
+    if (!user?.id || savingReportPreference) return
+
+    const nextValue = !reportEnabled
+    setSavingReportPreference(true)
+    setPreferenceError('')
+
+    try {
+      const { error } = await supabase
+        .from('user_email_preferences')
+        .upsert({
+          user_id: user.id,
+          monthly_report_enabled: nextValue,
+        }, { onConflict: 'user_id' })
+
+      if (error) throw error
+      setReportEnabled(nextValue)
+    } catch (requestError) {
+      console.error(requestError)
+      setPreferenceError('We could not save that preference right now.')
+    } finally {
+      setSavingReportPreference(false)
+    }
   }
 
   const handleExport = async () => {
@@ -370,6 +441,45 @@ export default function ExportHistory() {
             </div>
           </>
         )}
+
+        <div className="rounded-xl border px-3 py-3 mt-4 mb-3" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>Monthly report email</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--ink-4)' }}>
+                Get the same report for the previous month automatically on the 1st at 8:00 AM.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleReportToggle}
+              disabled={savingReportPreference || !user?.id}
+              className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border transition-colors"
+              style={{
+                borderColor: reportEnabled ? 'var(--green)' : 'var(--border)',
+                background: reportEnabled ? 'var(--green-light)' : 'var(--surface)',
+                opacity: savingReportPreference ? 0.7 : 1,
+                cursor: savingReportPreference || !user?.id ? 'not-allowed' : 'pointer',
+              }}
+              aria-pressed={reportEnabled}
+              aria-label={reportEnabled ? 'Disable monthly report email' : 'Enable monthly report email'}
+            >
+              <span
+                className="inline-block h-6 w-6 rounded-full shadow-sm transition-transform"
+                style={{
+                  transform: reportEnabled ? 'translateX(24px)' : 'translateX(4px)',
+                  background: reportEnabled ? 'var(--green)' : 'var(--ink-4)',
+                }}
+              />
+            </button>
+          </div>
+          <div className="mt-2 text-xs font-mono" style={{ color: reportEnabled ? 'var(--green)' : 'var(--ink-4)' }}>
+            {savingReportPreference ? 'Saving...' : reportEnabled ? 'Enabled' : 'Disabled'}
+          </div>
+          {preferenceError && (
+            <p className="mt-2 text-xs" style={{ color: 'var(--red)' }}>{preferenceError}</p>
+          )}
+        </div>
 
         {message && (
           <div className="rounded-xl border p-3 mb-3 text-sm" style={{ borderColor: 'var(--green)', background: 'var(--green-light)', color: 'var(--green)' }}>

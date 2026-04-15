@@ -112,7 +112,24 @@ Build settings (default for Vite):
 - Build command: `npm run build`
 - Output directory: `dist`
 
-Live deployment: [https://spendly-indol.vercel.app](https://spendly-indol.vercel.app)
+
+## Monthly Report Email
+
+The manual export and the monthly report should use the same HTML and XLSX payload. The only difference is the date range:
+
+- manual export uses the range selected in the UI
+- monthly report uses the previous calendar month
+- schedule it for the 1st day of every month at 8:00 AM in your chosen timezone
+
+Setup:
+
+1. Run the updated SQL from `supabase-schema.sql` so the `user_email_preferences` table exists.
+2. Deploy the Supabase Edge Function at `supabase/functions/monthly-report/index.ts`.
+3. Query only users with `monthly_report_enabled = true`.
+4. Schedule that function for `0 8 1 * *` in the timezone you want.
+5. Set the function secrets `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, and `REPORT_FROM_EMAIL` in Supabase; add `CRON_SECRET` if you want to require a signed cron request.
+
+If your Supabase schedule runs in UTC, convert 8:00 AM local time to UTC before saving the cron expression.
 
 ## Notes
 
