@@ -300,10 +300,47 @@ export default function ExportHistory() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
-      <div className="flex items-center justify-between mb-6 animate-fade-up">
+      <div className="flex items-start justify-between gap-3 mb-6 animate-fade-up">
         <h1 className="text-base font-medium" style={{ color: 'var(--ink)' }}>Export history</h1>
-        <span className="text-xs truncate max-w-[180px]" style={{ color: 'var(--ink-4)' }}>{user?.email || 'No email available'}</span>
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-4)' }}>
+              Monthly report
+            </span>
+            <button
+              type="button"
+              onClick={handleReportToggle}
+              disabled={savingReportPreference || !user?.id}
+              className="relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors"
+              style={{
+                borderColor: reportEnabled ? 'var(--green)' : 'var(--border)',
+                background: reportEnabled ? 'var(--green-light)' : 'var(--surface)',
+                opacity: savingReportPreference ? 0.7 : 1,
+                cursor: savingReportPreference || !user?.id ? 'not-allowed' : 'pointer',
+              }}
+              aria-pressed={reportEnabled}
+              aria-label={reportEnabled ? 'Disable monthly report email' : 'Enable monthly report email'}
+            >
+              <span
+                className="inline-block h-5 w-5 rounded-full shadow-sm transition-transform"
+                style={{
+                  transform: reportEnabled ? 'translateX(22px)' : 'translateX(3px)',
+                  background: reportEnabled ? 'var(--green)' : 'var(--ink-4)',
+                }}
+              />
+            </button>
+          </div>
+          <span className="text-xs font-mono" style={{ color: reportEnabled ? 'var(--green)' : 'var(--ink-4)' }}>
+            {savingReportPreference ? 'Saving...' : reportEnabled ? 'Enabled' : 'Disabled'}
+          </span>
+        </div>
       </div>
+
+      {preferenceError && (
+        <div className="rounded-xl border p-3 mb-4 text-xs" style={{ borderColor: 'var(--red)', background: 'var(--red-light)', color: 'var(--red)' }}>
+          {preferenceError}
+        </div>
+      )}
 
       <div
         className="rounded-2xl border p-4 mb-4 animate-fade-up stagger-1 relative"
@@ -441,45 +478,6 @@ export default function ExportHistory() {
             </div>
           </>
         )}
-
-        <div className="rounded-xl border px-3 py-3 mt-4 mb-3" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium" style={{ color: 'var(--ink)' }}>Monthly report email</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--ink-4)' }}>
-                Get the same report for the previous month automatically on the 1st at 8:00 AM.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleReportToggle}
-              disabled={savingReportPreference || !user?.id}
-              className="relative inline-flex h-8 w-14 shrink-0 items-center rounded-full border transition-colors"
-              style={{
-                borderColor: reportEnabled ? 'var(--green)' : 'var(--border)',
-                background: reportEnabled ? 'var(--green-light)' : 'var(--surface)',
-                opacity: savingReportPreference ? 0.7 : 1,
-                cursor: savingReportPreference || !user?.id ? 'not-allowed' : 'pointer',
-              }}
-              aria-pressed={reportEnabled}
-              aria-label={reportEnabled ? 'Disable monthly report email' : 'Enable monthly report email'}
-            >
-              <span
-                className="inline-block h-6 w-6 rounded-full shadow-sm transition-transform"
-                style={{
-                  transform: reportEnabled ? 'translateX(24px)' : 'translateX(4px)',
-                  background: reportEnabled ? 'var(--green)' : 'var(--ink-4)',
-                }}
-              />
-            </button>
-          </div>
-          <div className="mt-2 text-xs font-mono" style={{ color: reportEnabled ? 'var(--green)' : 'var(--ink-4)' }}>
-            {savingReportPreference ? 'Saving...' : reportEnabled ? 'Enabled' : 'Disabled'}
-          </div>
-          {preferenceError && (
-            <p className="mt-2 text-xs" style={{ color: 'var(--red)' }}>{preferenceError}</p>
-          )}
-        </div>
 
         {message && (
           <div className="rounded-xl border p-3 mb-3 text-sm" style={{ borderColor: 'var(--green)', background: 'var(--green-light)', color: 'var(--green)' }}>

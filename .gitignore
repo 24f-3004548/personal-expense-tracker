@@ -23,3 +23,12 @@ pnpm-debug.log*
 
 # Testing and coverage
 coverage/
+
+# Supabase local artifacts and secrets
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
+supabase/functions/.env
+supabase/functions/.env.*
