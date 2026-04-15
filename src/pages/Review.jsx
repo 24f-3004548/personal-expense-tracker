@@ -48,6 +48,8 @@ export default function Review() {
 
   const latestCompareMonth = month === 0 ? 11 : month - 1
   const latestCompareYear = month === 0 ? year - 1 : year
+  const currentMonthLabel = `${MONTH_NAMES[month]} ${year}`
+  const compareMonthLabel = `${MONTH_NAMES[compareMonth]} ${compareYear}`
 
   useEffect(() => {
     const isBeyondLatest =
@@ -163,6 +165,23 @@ export default function Review() {
       </div>
     )
   }
+
+  const CategoryShiftTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null
+    return (
+      <div className="px-3 py-2 rounded-lg shadow-sm border text-xs"
+        style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+        <p className="mb-1" style={{ color: 'var(--ink-3)' }}>{label}</p>
+        {payload.map((entry) => (
+          <p key={entry.name} style={{ color: entry.dataKey === 'currentAmount' ? 'var(--ink)' : 'var(--ink-4)' }}>
+            {entry.name}: {formatCurrencyFull(entry.value)}
+          </p>
+        ))}
+      </div>
+    )
+  }
+
+  const categoryShiftChartHeight = Math.max(190, categoryShiftRows.length * 48)
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
@@ -326,26 +345,44 @@ export default function Review() {
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                       <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Category shifts</p>
 
-                      <div className="h-2.5 rounded-full overflow-hidden flex mb-3" style={{ background: 'var(--surface-3)' }}>
-                        {categoryShiftRows.map((row) => {
-                          const meta = getCategoryMeta(row.name)
-                          const currentPct = data.totalExpenses > 0 ? (row.currentAmount / data.totalExpenses) * 100 : 0
-                          return (
-                            <div
-                              key={`stack-${row.name}`}
-                              title={`${row.name} ${currentPct.toFixed(1)}%`}
-                              style={{
-                                width: `${Math.max(1, currentPct)}%`,
-                                background: meta.color,
-                              }}
-                            />
-                          )
-                        })}
+                      <div className="flex items-center gap-3 text-[10px] mb-3" style={{ color: 'var(--ink-4)' }}>
+                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink)' }} />{currentMonthLabel}</span>
+                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink-4)' }} />{compareMonthLabel}</span>
                       </div>
 
-                      <div className="flex items-center gap-3 text-[10px] mb-3" style={{ color: 'var(--ink-4)' }}>
-                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink)' }} />{MONTH_NAMES[month]} spend</span>
-                        <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: 'var(--ink-4)' }} />vs {MONTH_NAMES[compareMonth]}</span>
+                      <div className="rounded-xl border px-2 py-3 mb-3" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
+                        <ResponsiveContainer width="100%" height={categoryShiftChartHeight}>
+                          <BarChart
+                            data={categoryShiftRows.map((row) => ({
+                              name: row.name,
+                              currentAmount: row.currentAmount,
+                              previousAmount: row.previousAmount,
+                            }))}
+                            layout="vertical"
+                            barGap={6}
+                            barCategoryGap={18}
+                          >
+                            <CartesianGrid horizontal={false} stroke="var(--border)" strokeDasharray="0" />
+                            <XAxis
+                              type="number"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 10, fill: 'var(--ink-4)', fontFamily: 'DM Mono' }}
+                              tickFormatter={(value) => formatCurrency(value)}
+                            />
+                            <YAxis
+                              type="category"
+                              dataKey="name"
+                              width={88}
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 11, fill: 'var(--ink-3)' }}
+                            />
+                            <Tooltip content={<CategoryShiftTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
+                            <Bar dataKey="currentAmount" name={currentMonthLabel} fill="var(--ink)" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="previousAmount" name={compareMonthLabel} fill="var(--ink-4)" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
                       </div>
 
                       {categoryShiftRows.map((row) => {
@@ -373,7 +410,7 @@ export default function Review() {
                               </div>
                             </div>
                             <div className="text-[10px] font-mono" style={{ color: 'var(--ink-4)' }}>
-                              {MONTH_NAMES[compareMonth]}: {formatCurrencyFull(row.previousAmount)}
+                              {compareMonthLabel}: {formatCurrencyFull(row.previousAmount)}
                             </div>
                           </div>
                         )
