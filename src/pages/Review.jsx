@@ -182,6 +182,18 @@ export default function Review() {
   }
 
   const categoryShiftChartHeight = 240
+  const categoryShiftBarSize = (() => {
+    if (categoryShiftRows.length <= 3) return 18
+    if (categoryShiftRows.length <= 5) return 14
+    if (categoryShiftRows.length <= 7) return 10
+    return 8
+  })()
+  const categoryShiftGroupGap = (() => {
+    if (categoryShiftRows.length <= 3) return 28
+    if (categoryShiftRows.length <= 5) return 20
+    if (categoryShiftRows.length <= 7) return 14
+    return 10
+  })()
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
@@ -359,7 +371,8 @@ export default function Review() {
                               previousAmount: row.previousAmount,
                             }))}
                             barGap={4}
-                            barCategoryGap={22}
+                            barCategoryGap={categoryShiftGroupGap}
+                            barSize={categoryShiftBarSize}
                           >
                             <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
                             <XAxis
@@ -381,8 +394,8 @@ export default function Review() {
                               tickFormatter={(value) => formatCurrency(value)}
                             />
                             <Tooltip content={<CategoryShiftTooltip />} cursor={{ fill: 'var(--surface-2)' }} />
-                            <Bar dataKey="currentAmount" name={currentMonthLabel} fill="var(--ink)" radius={[4, 4, 0, 0]} yAxisId={0} />
                             <Bar dataKey="previousAmount" name={compareMonthLabel} fill="var(--ink-4)" radius={[4, 4, 0, 0]} yAxisId={0} />
+                            <Bar dataKey="currentAmount" name={currentMonthLabel} fill="var(--ink)" radius={[4, 4, 0, 0]} yAxisId={0} />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
