@@ -284,7 +284,7 @@ export default function ExportHistory() {
                     >
                       <div>{range.label}</div>
                       <div className="text-xs font-mono" style={{ color: 'var(--ink-4)' }}>
-                        <p className="text-xs uppercase tracking-[0.16em]" style={{ color: 'var(--ink-4)' }}>Quick Summary</p>
+                        {formatDisplayDate(range.startDate)} - {formatDisplayDate(range.endDate)}
                       </div>
                     </button>
                   )
@@ -322,10 +322,9 @@ export default function ExportHistory() {
 
       <div className="rounded-2xl border p-4 animate-fade-up stagger-2" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
         <div className="flex items-baseline justify-between gap-2 mb-4">
-          <h2 className="text-sm font-medium" style={{ color: 'var(--ink)' }}>
-            {formatDisplayDate(startDate)} - {formatDisplayDate(endDate)}
+          <h2 className="text-xs uppercase tracking-[0.16em]" style={{ color: 'var(--ink-4)' }}>
+            Quick Summary
           </h2>
-          <span className="text-xs font-mono" style={{ color: 'var(--ink-3)' }}>{summary.transactionCount} total</span>
         </div>
 
         {loading ? (
