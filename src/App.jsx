@@ -13,8 +13,8 @@ function ProtectedRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--surface)' }}>
-        <div className="text-sm font-mono" style={{ color: 'var(--ink-4)' }}>loading...</div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8' }}>
+        <div style={{ fontSize: '14px', fontFamily: 'monospace', color: '#9a9a9a' }}>loading...</div>
       </div>
     )
   }
