@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { formatCurrencyFull, getTransactionsInRange, supabase } from '../lib/supabase'
 import { buildTransactionReportHtml, buildTransactionWorkbookBase64 } from '../lib/transactionExport'
@@ -6,6 +6,76 @@ import { buildTransactionReportHtml, buildTransactionWorkbookBase64 } from '../l
 const today = new Date()
 const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
 const defaultEndDate = today.toISOString().split('T')[0]
+
+const toInputDate = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const normalizeDate = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+const getRollingMonthRange = (months, now) => {
+  const end = normalizeDate(now)
+  const start = new Date(end)
+  start.setMonth(start.getMonth() - months)
+  return {
+    startDate: toInputDate(start),
+    endDate: toInputDate(end),
+  }
+}
+
+const getCurrentFinancialYearRange = (now) => {
+  const end = normalizeDate(now)
+  const currentYear = end.getFullYear()
+  const financialYearStartYear = end.getMonth() >= 3 ? currentYear : currentYear - 1
+  const start = new Date(financialYearStartYear, 3, 1)
+
+  return {
+    startDate: toInputDate(start),
+    endDate: toInputDate(end),
+  }
+}
+
+const buildQuickRanges = (now) => {
+  const end = normalizeDate(now)
+  const currentMonthStart = new Date(end.getFullYear(), end.getMonth(), 1)
+
+  return [
+    {
+      id: 'current-month',
+      label: 'Current month',
+      startDate: toInputDate(currentMonthStart),
+      endDate: toInputDate(end),
+    },
+    {
+      id: 'last-1-month',
+      label: 'Last one month',
+      ...getRollingMonthRange(1, end),
+    },
+    {
+      id: 'last-3-months',
+      label: 'Last 3 months',
+      ...getRollingMonthRange(3, end),
+    },
+    {
+      id: 'last-6-months',
+      label: 'Last 6 months',
+      ...getRollingMonthRange(6, end),
+    },
+    {
+      id: 'last-12-months',
+      label: 'Last 12 months',
+      ...getRollingMonthRange(12, end),
+    },
+    {
+      id: 'current-financial-year',
+      label: 'Current financial year',
+      ...getCurrentFinancialYearRange(end),
+    },
+  ]
+}
 
 const formatLongDate = (dateStr) => new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-IN', {
   day: 'numeric',
@@ -17,12 +87,45 @@ export default function ExportHistory() {
   const { user } = useAuth()
   const [startDate, setStartDate] = useState(defaultStartDate)
   const [endDate, setEndDate] = useState(defaultEndDate)
+  const [isQuickRangeOpen, setIsQuickRangeOpen] = useState(false)
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
   const [message, setMessage] = useState('')
   const [loadError, setLoadError] = useState('')
   const [exportError, setExportError] = useState('')
+  const quickRangeRef = useRef(null)
+
+  const quickRanges = useMemo(() => buildQuickRanges(new Date()), [])
+
+  const activeQuickRangeId = useMemo(
+    () => quickRanges.find((range) => range.startDate === startDate && range.endDate === endDate)?.id ?? null,
+    [quickRanges, startDate, endDate],
+  )
+
+  useEffect(() => {
+    if (!isQuickRangeOpen) return
+
+    const handlePointerDown = (event) => {
+      if (!quickRangeRef.current?.contains(event.target)) {
+        setIsQuickRangeOpen(false)
+      }
+    }
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsQuickRangeOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isQuickRangeOpen])
 
   useEffect(() => {
     if (!user?.id || !startDate || !endDate || startDate > endDate) {
@@ -73,6 +176,12 @@ export default function ExportHistory() {
   }, [transactions])
 
   const canExport = Boolean(user?.email) && startDate <= endDate && !loading && transactions.length > 0 && !exporting
+
+  const handleQuickRangeSelect = (range) => {
+    setStartDate(range.startDate)
+    setEndDate(range.endDate)
+    setIsQuickRangeOpen(false)
+  }
 
   const handleExport = async () => {
     if (!canExport) return
@@ -125,7 +234,57 @@ export default function ExportHistory() {
       </div>
 
       <div className="rounded-2xl border p-4 mb-4 animate-fade-up stagger-1" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-        <p className="text-xs uppercase tracking-[0.16em] mb-3" style={{ color: 'var(--ink-4)' }}>Date range</p>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <p className="text-xs uppercase tracking-[0.16em]" style={{ color: 'var(--ink-4)' }}>Date range</p>
+          <div className="relative" ref={quickRangeRef}>
+            <button
+              type="button"
+              onClick={() => setIsQuickRangeOpen((open) => !open)}
+              className="inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-medium"
+              style={{
+                borderColor: 'var(--border)',
+                color: 'var(--ink-2)',
+                background: isQuickRangeOpen ? 'var(--surface-2)' : 'var(--surface)',
+              }}
+              aria-haspopup="menu"
+              aria-expanded={isQuickRangeOpen}
+            >
+              Quick ranges
+              <span className="font-mono" style={{ color: 'var(--ink-4)' }}>{isQuickRangeOpen ? '▴' : '▾'}</span>
+            </button>
+
+            {isQuickRangeOpen && (
+              <div
+                className="absolute right-0 top-full z-30 mt-2 w-64 rounded-2xl border p-2 shadow-lg"
+                style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
+                role="menu"
+              >
+                {quickRanges.map((range) => {
+                  const isActive = activeQuickRangeId === range.id
+
+                  return (
+                    <button
+                      key={range.id}
+                      type="button"
+                      onClick={() => handleQuickRangeSelect(range)}
+                      className="w-full rounded-xl px-3 py-2 text-left text-sm"
+                      style={{
+                        color: isActive ? 'var(--ink)' : 'var(--ink-2)',
+                        background: isActive ? 'var(--surface-2)' : 'transparent',
+                      }}
+                      role="menuitem"
+                    >
+                      <div>{range.label}</div>
+                      <div className="text-xs font-mono" style={{ color: 'var(--ink-4)' }}>
+                        {range.startDate} - {range.endDate}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-4)' }}>Start date</label>
@@ -227,7 +386,7 @@ export default function ExportHistory() {
             color: canExport ? 'var(--surface)' : 'var(--ink-4)',
           }}
         >
-          {exporting ? 'Sending report...' : 'Email transaction report'}
+          {exporting ? 'Sending report...' : 'Get transaction report'}
         </button>
       </div>
     </div>
