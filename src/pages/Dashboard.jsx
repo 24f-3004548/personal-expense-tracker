@@ -231,7 +231,7 @@ export default function Dashboard() {
                       innerRadius={62}
                       outerRadius={78}
                     >
-                      {data.categoryBreakdown.map((entry, i) => (
+                      {data.categoryBreakdown.map((entry) => (
                         <Cell key={entry.name} fill={getCategoryMeta(entry.name).color} />
                       ))}
                     </Pie>
@@ -263,7 +263,7 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </div>
               <div className="space-y-2">
-                {data.categoryBreakdown.slice(0, 5).map((cat, i) => {
+                {data.categoryBreakdown.slice(0, 5).map((cat) => {
                   const meta = getCategoryMeta(cat.name)
                   const pct = data.totalExpenses ? Math.round((cat.amount / data.totalExpenses) * 100) : 0
                   return (

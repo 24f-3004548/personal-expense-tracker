@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const NAV = [
@@ -13,7 +13,6 @@ const NAV = [
 export default function AppLayout({ children }) {
   const { user, signOut } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const location = useLocation()
 
   const name = user?.user_metadata?.name || user?.email?.split('@')[0] || 'You'
   const initial = name[0].toUpperCase()

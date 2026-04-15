@@ -200,7 +200,7 @@ export default function ExportHistory() {
       })
       const workbookBase64 = await buildTransactionWorkbookBase64(transactions, startDate, endDate)
 
-      const { data, error: fnError } = await supabase.functions.invoke('resend-email', {
+      const { error: fnError } = await supabase.functions.invoke('resend-email', {
         body: {
           to: user.email,
           subject: 'Transaction Report - ' + formatDisplayDate(startDate) + ' to ' + formatDisplayDate(endDate),

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { DEFAULT_CATEGORIES, addExpense, formatCurrencyFull } from '../../lib/supabase'
+import { DEFAULT_CATEGORIES, addExpense } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import DateInput from '../DateInput'
 

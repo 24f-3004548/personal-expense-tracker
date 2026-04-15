@@ -35,8 +35,7 @@ export default function Review() {
     finally { setLoading(false) }
   }, [user.id, month, year, compareMonth, compareYear])
 
-  useEffect(() => { load() }, [month, year])
-  useEffect(() => { load() }, [compareMonth, compareYear])
+  useEffect(() => { load() }, [load])
 
   const prevMonth = () => {
     if (month === 0) { setMonth(11); setYear(y => y - 1) }

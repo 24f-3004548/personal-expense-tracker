@@ -1,6 +1,4 @@
-import { format } from 'date-fns'
 import { formatCurrencyFull, getCategoryMeta } from './supabase'
-import { version } from 'react'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -10,8 +8,6 @@ const escapeHtml = (value) => String(value ?? '')
   .replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#39;')
-
-const toDateKey = (dateStr) => dateStr
 
 const formatPrettyDate = (dateStr) => {
   const date = new Date(`${dateStr}T00:00:00`)
@@ -34,7 +30,7 @@ const buildTransactionSummary = (transactions) => {
 
   transactions.forEach((transaction) => {
     const amount = Number(transaction.amount) || 0
-    const dateKey = toDateKey(transaction.date)
+    const dateKey = transaction.date
 
     if (!summary.bucketTotals.has(dateKey)) {
       summary.bucketTotals.set(dateKey, { date: dateKey, income: 0, expenses: 0 })
@@ -70,7 +66,6 @@ const buildDailyBuckets = (transactions, startDate, endDate) => {
   for (let i = 0; i < totalDays; i++) {
     const current = new Date(start)
     current.setDate(start.getDate() + i)
-    // FIX (cosmetic): corrected indentation
     const label = i % 5 === 0
       ? current.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
       : ''
@@ -133,24 +128,15 @@ const getChartUrl = async (chartConfig) => {
   if (!payload?.url) {
     throw new Error('QuickChart create did not return a URL')
   }
-  console.log(payload.url)
   return payload.url
 }
 
 const buildDualAxisLineChartBlock = async (title, subtitle, buckets) => {
   const width = 600
   const maxPoints = 25
-
-  // FIX 1: Guard against step=0 when buckets is empty or shorter than maxPoints.
-  // Math.ceil(0 / 25) = 0, causing i % 0 = NaN, so sampled would always be [].
   const step = Math.max(1, Math.ceil(buckets.length / maxPoints))
 
   const sampled = buckets.filter((_, i) => i % step === 0)
-
-  // FIX 2: b.label is '' for 4 out of every 5 days (set only at i%5===0 in
-  // buildDailyBuckets). When step doesn't align with that 5-day cadence, all
-  // sampled labels are empty strings, producing a completely blank x-axis.
-  // Fall back to a formatted date string so every sampled tick is labelled.
   const labels = sampled.map(b =>
     b.label || b.date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
   )
@@ -213,9 +199,6 @@ const buildDualAxisLineChartBlock = async (title, subtitle, buckets) => {
         },
         y1: {
           position: 'left',
-          // FIX 3: incomeMax was computed but never wired into the scale, so
-          // Chart.js auto-scaled y1 independently. Use suggestedMax so the
-          // axis ceiling matches the legend header value shown below the chart.
           suggestedMax: incomeMax,
           ticks: {
             color: '#16a34a',
@@ -227,7 +210,6 @@ const buildDualAxisLineChartBlock = async (title, subtitle, buckets) => {
         },
         y2: {
           position: 'right',
-          // FIX 3 (continued): same issue for the expense axis.
           suggestedMax: expenseMax,
           ticks: {
             color: '#111827',
@@ -390,7 +372,9 @@ export const buildTransactionReportHtml = async ({ userName, startDate, endDate,
           <div style="margin-top:24px;">
             <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:4px;">Expense breakdown</div>
             <div style="font-size:12px;color:#6b7280;margin-bottom:14px;">The categories below are based on expense transactions only.</div>
-            ${categoryRows}
+            <div style="margin-top:12px;border:1px solid #e5e7eb;border-radius:16px;padding:12px;">
+              ${categoryRows}
+            </div>
           </div>
 
         </div>
