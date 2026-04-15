@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { addIncome } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import DateInput from '../DateInput'
 
 function toLocalDateInputValue(value) {
   const d = new Date(value)
@@ -77,10 +78,9 @@ export default function AddIncomeModal({ onClose, onAdded, month, year }) {
 
           <div>
             <label className="text-xs block mb-1.5" style={{ color: 'var(--ink-4)' }}>Date</label>
-            <input
-              type="date"
+            <DateInput
               value={date}
-              onChange={e => setDate(e.target.value)}
+              onChange={setDate}
               max={toLocalDateInputValue(new Date())}
               className="w-full px-3 py-2.5 text-sm rounded-lg border outline-none"
               style={{ background: 'var(--surface-2)', borderColor: 'var(--border)', color: 'var(--ink)' }}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { formatCurrencyFull, getTransactionsInRange, supabase } from '../lib/supabase'
 import { buildTransactionReportHtml, buildTransactionWorkbookBase64 } from '../lib/transactionExport'
+import DateInput from '../components/DateInput'
 
 const today = new Date()
 const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0]
@@ -295,22 +296,20 @@ export default function ExportHistory() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-4)' }}>Start date</label>
-            <input
-              type="date"
+            <DateInput
               value={startDate}
               max={today.toISOString().split('T')[0]}
-              onChange={(event) => setStartDate(event.target.value)}
+              onChange={setStartDate}
               className="w-full px-3 py-2.5 text-sm rounded-xl border outline-none"
               style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--ink)' }}
             />
           </div>
           <div>
             <label className="block text-xs mb-1.5" style={{ color: 'var(--ink-4)' }}>End date</label>
-            <input
-              type="date"
+            <DateInput
               value={endDate}
               max={today.toISOString().split('T')[0]}
-              onChange={(event) => setEndDate(event.target.value)}
+              onChange={setEndDate}
               className="w-full px-3 py-2.5 text-sm rounded-xl border outline-none"
               style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--ink)' }}
             />

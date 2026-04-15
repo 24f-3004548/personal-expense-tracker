@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../context/AuthContext'
+import DateInput from '../components/DateInput'
 import {
   getExpenses, getIncome, deleteExpense, updateExpense, deleteIncome, updateIncome,
   DEFAULT_CATEGORIES, getCategoryMeta, formatCurrencyFull, formatDate, formatTime, MONTH_NAMES
@@ -197,10 +198,9 @@ export default function Transactions() {
                     </div>
                     <div>
                       <label className="text-xs block mb-1" style={{ color: 'var(--ink-4)' }}>Date</label>
-                      <input
-                        type="date"
+                      <DateInput
                         value={editForm.date}
-                        onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))}
+                        onChange={(value) => setEditForm(f => ({ ...f, date: value }))}
                         max={new Date().toISOString().split('T')[0]}
                         className="w-full px-2.5 py-2 text-sm rounded-lg border outline-none"
                         style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--ink)' }}

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { DEFAULT_CATEGORIES, addExpense, formatCurrencyFull } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import DateInput from '../DateInput'
 
 const QUICK_AMOUNTS = [50, 100, 200, 500]
 
@@ -134,10 +135,9 @@ export default function QuickAdd({ onAdded }) {
             color: 'var(--ink)',
           }}
         />
-        <input
-          type="date"
+        <DateInput
           value={date}
-          onChange={e => setDate(e.target.value)}
+          onChange={setDate}
           max={new Date().toISOString().split('T')[0]}
           className="w-full sm:w-auto px-2 py-2 text-sm rounded-lg border outline-none"
           style={{
