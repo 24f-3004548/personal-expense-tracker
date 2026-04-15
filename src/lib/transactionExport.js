@@ -275,7 +275,7 @@ export const buildTransactionReportHtml = async ({ userName, startDate, endDate,
 
   const categoryRows = categories.length > 0
     ? `
-      <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
+      <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:separate;border-spacing:0;">
         <tr>
           <td style="padding-bottom:10px;">
             <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;">
@@ -295,11 +295,11 @@ export const buildTransactionReportHtml = async ({ userName, startDate, endDate,
               <td style="padding:6px 0;border-bottom:1px solid #f3f4f6;">
                 <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;">
                   <tr>
-                    <td style="font-size:12px;color:#111827;">
+                    <td style="font-size:12px;color:#111827;padding:6px 0;">
                       <span style="display:inline-block;width:8px;height:8px;border-radius:999px;background:${category.color};margin-right:6px;"></span>
                       ${escapeHtml(category.icon)} ${escapeHtml(category.name)}
                     </td>
-                    <td style="font-size:11px;font-family:monospace;color:#4b5563;text-align:right;white-space:nowrap;">
+                    <td style="font-size:11px;font-family:monospace;color:#4b5563;text-align:right;white-space:nowrap;padding:6px 0;">
                       ${escapeHtml(formatCurrencyFull(category.amount))} · ${percent}%
                     </td>
                   </tr>
@@ -310,7 +310,7 @@ export const buildTransactionReportHtml = async ({ userName, startDate, endDate,
         }).join('')}
       </table>
     `
-    : '<div style="font-size:13px;color:#6b7280;">No expense categories in this range.</div>'
+    : '<div style="font-size:13px;color:#6b7280;padding:6px;">No expense categories in this range.</div>'
 
   return `
     <div style="margin:0;padding:0;background:#fafaf8;color:#111827;font-family:Arial,Helvetica,sans-serif;">
