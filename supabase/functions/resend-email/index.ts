@@ -39,6 +39,12 @@ const escapeHtml = (value: unknown) => String(value ?? "")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#39;");
 
+const compactEmailHtml = (html: string) => html
+  .replace(/\r?\n/g, "")
+  .replace(/>\s+</g, "><")
+  .replace(/\s{2,}/g, " ")
+  .trim();
+
 const formatCurrencyFull = (amount: number | string, currency = "₹") => {
   const num = Number(amount) || 0;
   return `${currency}${num.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
@@ -283,7 +289,7 @@ const buildTransactionReportHtml = async ({
   const incomeCount = transactions.filter((transaction) => transaction._type === "income").length;
   const expenseCount = transactions.filter((transaction) => transaction._type === "expense").length;
 
-  const categories = buildCategoryBreakdown(transactions).slice(0, 6);
+  const categories = buildCategoryBreakdown(transactions).slice(0, 4);
   const buckets = buildDailyBuckets(transactions, startDate, endDate);
   const net = totalIncome - totalExpenses;
   const chartBlock = await buildDualAxisLineChartBlock(
@@ -397,7 +403,7 @@ const buildTransactionReportHtml = async ({
           </div>
 
           <div style="margin-top:20px;padding-top:14px;border-top:1px solid #f3f4f6;text-align:center;">
-            <div className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>Spendly</div>
+            <div style="font-size:12px;color:#111827;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Spendly</div>
             <div style="margin-top:4px;font-size:11px;color:#6b7280;">Your personal expense tracker</div>
           </div>
 
@@ -575,13 +581,15 @@ Deno.serve(async (req: Request) => {
   });
 
   try {
-    const { html: emailHtml, inlineAttachments } = await inlineQuickChartImages(String(resolvedHtml));
+    const compactHtml = compactEmailHtml(String(resolvedHtml));
+    const { html: emailHtml, inlineAttachments } = await inlineQuickChartImages(compactHtml);
+    const finalHtml = compactEmailHtml(emailHtml);
 
     await transporter.sendMail({
       from: `"Spendly" <${GMAIL_USER}>`,
       to,
       subject: resolvedSubject,
-      html: emailHtml,
+      html: finalHtml,
       attachments: [
         ...(Array.isArray(attachments)
           ? attachments.map((a: any) => ({

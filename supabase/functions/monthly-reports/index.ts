@@ -70,6 +70,13 @@ const escapeHtml = (value: unknown) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;")
 
+const compactEmailHtml = (html: string) =>
+  html
+    .replace(/\r?\n/g, "")
+    .replace(/>\s+</g, "><")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+
 const uint8ToBase64 = (bytes: Uint8Array) => {
   let binary = ""
   const chunkSize = 0x8000
@@ -431,7 +438,7 @@ const buildReportHtml = async ({
   transactions: Transaction[]
 }) => {
   const summary = buildTransactionSummary(transactions)
-  const categories = buildCategoryBreakdown(transactions).slice(0, 6)
+  const categories = buildCategoryBreakdown(transactions).slice(0, 4)
   const buckets = buildDailyBuckets(transactions, startDate, endDate)
   const net = summary.totalIncome - summary.totalExpenses
 
@@ -550,7 +557,7 @@ const buildReportHtml = async ({
           </p>
 
           <div style="margin-top:20px;padding-top:14px;border-top:1px solid #f3f4f6;text-align:center;">
-            <div className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>Spendly</div>
+            <div style="font-size:12px;color:#111827;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Spendly</div>
             <div style="margin-top:4px;font-size:11px;color:#6b7280;">Your personal expense tracker</div>
           </div>
         </div>
@@ -698,13 +705,14 @@ Deno.serve(async (req: Request) => {
 
             const userName = user.user_metadata?.name || user.email?.split("@")[0] || "You"
             const { html, inlineAttachments } = await buildReportHtml({ userName, monthLabel, startDate, endDate, transactions })
+            const compactHtml = compactEmailHtml(html)
             const workbookBase64 = buildWorkbookBase64(transactions, startDate, endDate, monthLabel)
 
             await transporter.sendMail({
               from: `"Spendly" <${GMAIL_USER}>`,
               to: user.email as string,
               subject: `Transaction Report - ${monthLabel}`,
-              html,
+              html: compactHtml,
               attachments: [
                 {
                   filename: `transaction-history-${safeMonthToken(monthLabel)}.xlsx`,
