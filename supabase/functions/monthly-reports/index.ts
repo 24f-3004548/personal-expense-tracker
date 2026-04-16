@@ -70,6 +70,17 @@ const escapeHtml = (value: unknown) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;")
 
+const uint8ToBase64 = (bytes: Uint8Array) => {
+  let binary = ""
+  const chunkSize = 0x8000
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+  }
+
+  return btoa(binary)
+}
+
 const formatCurrencyFull = (amount: number | string, currency = "₹") => {
   const num = Number(amount) || 0
   return `${currency}${num.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
@@ -240,6 +251,26 @@ const getChartUrl = async (chartConfig: unknown) => {
   return payload.url as string
 }
 
+const getChartInlineAttachment = async (chartUrl: string, cid: string) => {
+  const response = await fetch(chartUrl)
+
+  if (!response.ok) {
+    throw new Error(`QuickChart image fetch failed (${response.status})`)
+  }
+
+  const contentType = response.headers.get("content-type") || "image/png"
+  const bytes = new Uint8Array(await response.arrayBuffer())
+
+  return {
+    filename: "cash-flow-chart.png",
+    content: uint8ToBase64(bytes),
+    encoding: "base64" as const,
+    cid,
+    contentType,
+    contentDisposition: "inline" as const,
+  }
+}
+
 const buildDualAxisLineChartBlock = async (title: string, subtitle: string, buckets: Array<{ date: Date; label: string; income: number; expenses: number }>) => {
   const width = 600
   const maxPoints = 25
@@ -333,13 +364,27 @@ const buildDualAxisLineChartBlock = async (title: string, subtitle: string, buck
   }
 
   let chart = ""
+  let inlineAttachment:
+    | {
+      filename: string
+      content: string
+      encoding: "base64"
+      cid: string
+      contentType: string
+      contentDisposition: "inline"
+    }
+    | null = null
+
   try {
     const chartUrl = await getChartUrl(chartConfig)
+    const chartCid = `cashflow-chart-${crypto.randomUUID()}@spendly`
+    inlineAttachment = await getChartInlineAttachment(chartUrl, chartCid)
+
     chart = `
       <img
-        src="${escapeHtml(chartUrl)}"
+        src="cid:${escapeHtml(chartCid)}"
         width="${width}"
-        style="display:block;margin:16px auto;border-radius:8px;align:center;"
+        style="display:block;margin:16px auto;border-radius:8px;max-width:100%;height:auto;"
         alt="Cash flow chart"
       />
     `
@@ -347,7 +392,7 @@ const buildDualAxisLineChartBlock = async (title: string, subtitle: string, buck
     chart = "<div style=\"margin-top:16px;font-size:12px;color:#6b7280;\">Chart unavailable in this email send. Please check the app preview for chart details.</div>"
   }
 
-  return `
+  const html = `
     <div style="margin-top:24px;">
       <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;width:100%;">
         <tr>
@@ -368,6 +413,8 @@ const buildDualAxisLineChartBlock = async (title: string, subtitle: string, buck
       </div>
     </div>
   `
+
+  return { html, inlineAttachment }
 }
 
 const buildReportHtml = async ({
@@ -433,7 +480,7 @@ const buildReportHtml = async ({
     `
     : "<div style=\"font-size:13px;color:#6b7280;padding:6px;\">No expense categories in this range.</div>"
 
-  return `
+  const html = `
     <div style="margin:0;padding:0;background:#fafaf8;color:#111827;font-family:Arial,Helvetica,sans-serif;">
       <div style="max-width:760px;margin:0 auto;padding:24px;">
         <div style="background:#fff;border:1px solid #e5e7eb;border-radius:24px;padding:24px;box-shadow:0 12px 40px rgba(15,15,15,0.06);">
@@ -488,7 +535,7 @@ const buildReportHtml = async ({
             </tr>
           </table>
 
-          ${chartBlock}
+          ${chartBlock.html}
 
           <div style="margin-top:24px;">
             <div style="font-size:16px;font-weight:700;color:#111827;margin-bottom:4px;">Expense breakdown</div>
@@ -510,6 +557,11 @@ const buildReportHtml = async ({
       </div>
     </div>
   `
+
+  return {
+    html,
+    inlineAttachments: chartBlock.inlineAttachment ? [chartBlock.inlineAttachment] : [],
+  }
 }
 
 const buildWorkbookBase64 = (transactions: Transaction[], startDate: string, endDate: string, monthLabel: string) => {
@@ -645,7 +697,7 @@ Deno.serve(async (req: Request) => {
             }
 
             const userName = user.user_metadata?.name || user.email?.split("@")[0] || "You"
-            const html = await buildReportHtml({ userName, monthLabel, startDate, endDate, transactions })
+            const { html, inlineAttachments } = await buildReportHtml({ userName, monthLabel, startDate, endDate, transactions })
             const workbookBase64 = buildWorkbookBase64(transactions, startDate, endDate, monthLabel)
 
             await transporter.sendMail({
@@ -659,6 +711,7 @@ Deno.serve(async (req: Request) => {
                   content: workbookBase64,
                   encoding: "base64",
                 },
+                ...inlineAttachments,
               ],
             })
 

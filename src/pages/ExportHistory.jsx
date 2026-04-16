@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { formatCurrencyFull, getTransactionsInRange, supabase } from '../lib/supabase'
-import { buildTransactionReportHtml, buildTransactionWorkbookBase64 } from '../lib/transactionExport'
+import { buildTransactionWorkbookBase64 } from '../lib/transactionExport'
 import { getPreviousMonthRange } from '../lib/reportPeriods'
 import DateInput from '../components/DateInput'
 
@@ -263,19 +263,19 @@ export default function ExportHistory() {
     setExportError('')
 
     try {
-      const html = await buildTransactionReportHtml({
-        userName: user?.user_metadata?.name || user?.email?.split('@')[0] || 'You',
-        startDate,
-        endDate,
-        transactions,
-      })
       const workbookBase64 = await buildTransactionWorkbookBase64(transactions, startDate, endDate)
 
       const { error: fnError } = await supabase.functions.invoke('resend-email', {
         body: {
           to: user.email,
           subject: 'Transaction Report - ' + formatDisplayDate(startDate) + ' to ' + formatDisplayDate(endDate),
-          html,
+          template: 'transaction-report',
+          data: {
+            userName: user?.user_metadata?.name || user?.email?.split('@')[0] || 'You',
+            startDate,
+            endDate,
+            transactions,
+          },
           attachments: [
             {
               filename: `transaction-history-${startDate}-to-${endDate}.xlsx`,
