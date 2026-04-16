@@ -103,7 +103,7 @@ export default function AuthPage() {
             <span className="text-sm font-mono" style={{ color: 'var(--ink-4)' }}>₹</span>
           </div>
           <p className="text-sm" style={{ color: 'var(--ink-3)' }}>
-            {mode === 'login' ? 'Welcome back.' : 'Start tracking your spending.'}
+            Your personal expense tracker. 
           </p>
         </div>
 
