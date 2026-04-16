@@ -72,9 +72,14 @@ const escapeHtml = (value: unknown) =>
 
 const compactEmailHtml = (html: string) =>
   html
-    .replace(/\r?\n/g, "")
-    .replace(/>\s+</g, "><")
-    .replace(/\s{2,}/g, " ")
+    // Remove non-conditional comments while preserving Outlook conditional blocks.
+    .replace(/<!--(?!\[if\s)[\s\S]*?-->/gi, "")
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join("\n")
+    .replace(/[ \t]{2,}/g, " ")
     .trim()
 
 const uint8ToBase64 = (bytes: Uint8Array) => {
@@ -404,7 +409,6 @@ const buildDualAxisLineChartBlock = async (title: string, subtitle: string, buck
       <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border-collapse:collapse;width:100%;">
         <tr>
           <td style="font-size:16px;font-weight:700;color:#111827;">${escapeHtml(title)}</td>
-          <td style="font-size:12px;color:#6b7280;text-align:right;white-space:nowrap;">Dual axis</td>
         </tr>
         <tr>
           <td colspan="2" style="font-size:12px;color:#6b7280;padding-top:2px;">${escapeHtml(subtitle)}</td>
@@ -557,7 +561,7 @@ const buildReportHtml = async ({
           </p>
 
           <div style="margin-top:20px;padding-top:14px;border-top:1px solid #f3f4f6;text-align:center;">
-            <div style="font-size:12px;color:#111827;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Spendly</div>
+            <div style="font-size:12px;color:#111827;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;font-family:'DM Sans',system-ui,sans-serif;">Spendly</div>
             <div style="margin-top:4px;font-size:11px;color:#6b7280;">Your personal expense tracker</div>
           </div>
         </div>
