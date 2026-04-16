@@ -299,13 +299,16 @@ export default function ExportHistory() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
       <div className="flex items-start justify-between gap-3 mb-6 animate-fade-up">
         <h1 className="text-base font-medium" style={{ color: 'var(--ink)' }}>Export history</h1>
         <div className="flex flex-col items-end gap-1.5">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 whitespace-nowrap">
             <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: 'var(--ink-4)' }}>
-              Monthly report
+              Monthly report ·
+            </span>
+            <span className="text-[11px] font-medium" style={{ color: reportEnabled ? 'var(--green)' : 'var(--ink-4)' }}>
+              {savingReportPreference ? 'Saving...' : reportEnabled ? 'Enabled' : 'Disabled'}
             </span>
             <button
               type="button"
@@ -330,9 +333,6 @@ export default function ExportHistory() {
               />
             </button>
           </div>
-          <span className="text-xs font-mono" style={{ color: reportEnabled ? 'var(--green)' : 'var(--ink-4)' }}>
-            {savingReportPreference ? 'Saving...' : reportEnabled ? 'Enabled' : 'Disabled'}
-          </span>
         </div>
       </div>
 

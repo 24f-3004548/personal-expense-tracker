@@ -124,7 +124,7 @@ export default function Transactions() {
   const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a))
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 md:py-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div className="flex items-center gap-2">

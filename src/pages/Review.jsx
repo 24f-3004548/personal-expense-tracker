@@ -88,13 +88,14 @@ export default function Review() {
   const expenseDelta = prevData?.totalExpenses !== undefined && data?.totalExpenses !== undefined
     ? (data.totalExpenses - prevData.totalExpenses)
     : null
+  const prevMonthHasData = Boolean(prevData?.expenses?.length || prevData?.income?.length)
 
   const largestExpense = data?.expenses?.length
     ? data.expenses.reduce((max, e) => Number(e.amount) > Number(max.amount) ? e : max, data.expenses[0])
     : null
 
   const insights = []
-  if (expenseDelta !== null) {
+  if (prevMonthHasData && expenseDelta !== null) {
     if (Math.abs(expenseDelta) > 0) {
       insights.push({
         icon: expenseDelta > 0 ? '↑' : '↓',
@@ -196,7 +197,7 @@ export default function Review() {
   })()
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div className="flex items-center gap-2">

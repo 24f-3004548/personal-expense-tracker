@@ -51,7 +51,7 @@ export default function Budget() {
   const isOver = remaining < 0
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
       <div className="mb-6 animate-fade-up">
         <h1 className="text-base font-medium mb-0.5" style={{ color: 'var(--ink)' }}>Budget</h1>
         <p className="text-xs" style={{ color: 'var(--ink-4)' }}>{MONTH_NAMES[now.getMonth()]} {now.getFullYear()}</p>
