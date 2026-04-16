@@ -550,8 +550,8 @@ const buildReportHtml = async ({
           </p>
 
           <div style="margin-top:20px;padding-top:14px;border-top:1px solid #f3f4f6;text-align:center;">
-            <div style="font-size:12px;color:#111827;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Spendly</div>
-            <div style="margin-top:4px;font-size:11px;color:#6b7280;">Track smarter spending, one report at a time.</div>
+            <div className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>Spendly</div>
+            <div style="margin-top:4px;font-size:11px;color:#6b7280;">Your personal expense tracker</div>
           </div>
         </div>
       </div>

@@ -397,8 +397,8 @@ const buildTransactionReportHtml = async ({
           </div>
 
           <div style="margin-top:20px;padding-top:14px;border-top:1px solid #f3f4f6;text-align:center;">
-            <div style="font-size:12px;color:#111827;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Spendly</div>
-            <div style="margin-top:4px;font-size:11px;color:#6b7280;">Track smarter spending, one report at a time.</div>
+            <div className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>Spendly</div>
+            <div style="margin-top:4px;font-size:11px;color:#6b7280;">Your personal expense tracker</div>
           </div>
 
         </div>
@@ -495,13 +495,13 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Missing Gmail credentials" }, 500);
   }
 
-  // 🔐 AUTH: extract JWT
+  // Require user auth token.
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return jsonResponse({ error: "Missing Authorization header" }, 401);
   }
 
-  // 🔐 AUTH: validate user
+  // Validate user from token.
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -563,7 +563,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Missing required fields. Provide subject+html or template+data" }, 400);
   }
 
-  // Always send to authenticated user
+  // Send only to the authenticated user's email.
   const to = user.email;
 
   const transporter = nodemailer.createTransport({

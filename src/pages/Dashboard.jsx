@@ -42,7 +42,6 @@ export default function Dashboard() {
 
   useEffect(() => { load() }, [load])
 
-  // Month navigation
   const prevMonth = () => {
     if (month === 0) { setMonth(11); setYear(y => y - 1) }
     else setMonth(m => m - 1)
@@ -53,7 +52,6 @@ export default function Dashboard() {
   }
   const canGoNext = !(month === now.getMonth() && year === now.getFullYear())
 
-  // Compare to previous month in trend
   const currentTrend = trend.find(t => t.month === month && t.year === year)
   const prevTrend = (() => {
     const pm = month === 0 ? 11 : month - 1
@@ -108,7 +106,6 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div>
           <div className="flex items-center gap-2">
@@ -139,7 +136,6 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-up stagger-1">
         {[
           {
@@ -149,10 +145,9 @@ export default function Dashboard() {
               ? `of ${formatCurrency(data?.budget?.amount)} budget`
               : 'No budget set',
             color: 'var(--ink)',
-            show: true,
           },
-          { label: 'Earned', value: formatCurrency(data?.totalIncome), color: 'var(--green)', show: true },
-          { label: 'Saved', value: formatCurrency(Math.abs(savings)), sub: savings >= 0 ? `${savingsRate}% saved of income` : 'over budget,', color: savings >= 0 ? 'var(--green)' : 'var(--red)', show: true },
+          { label: 'Earned', value: formatCurrency(data?.totalIncome), color: 'var(--green)' },
+          { label: 'Saved', value: formatCurrency(Math.abs(savings)), sub: savings >= 0 ? `${savingsRate}% saved of income` : 'over budget,', color: savings >= 0 ? 'var(--green)' : 'var(--red)' },
         ].map(stat => (
           <div key={stat.label} className="rounded-xl border p-3 md:p-4"
             style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -165,7 +160,6 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Budget progress bar */}
       {budgetAmount > 0 && (
         <div className="mb-6 animate-fade-up stagger-2">
           <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -200,9 +194,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Main content grid */}
       <div className="grid md:grid-cols-5 gap-4 mb-6">
-        {/* Quick add */}
         <div className="md:col-span-2 animate-fade-up stagger-2">
           {isCurrentMonth && <QuickAdd onAdded={load} />}
           {!isCurrentMonth && (
@@ -213,7 +205,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Donut chart */}
         <div className="md:col-span-3 rounded-xl border p-4 animate-fade-up stagger-3"
           style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
           <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Spending by category</p>
@@ -284,7 +275,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent transactions */}
       {recentTransactions.length > 0 && (
         <div className="rounded-xl border animate-fade-up stagger-5"
           style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -325,7 +315,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Empty state */}
       {data?.expenses?.length === 0 && (
         <div className="text-center py-16 animate-fade-in">
           <p className="text-2xl mb-2">₹</p>

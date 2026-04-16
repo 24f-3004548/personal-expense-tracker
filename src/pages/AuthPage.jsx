@@ -94,7 +94,6 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--surface)' }}>
       <div className="w-full max-w-sm animate-fade-up">
-        {/* Logo */}
         <div className="mb-10">
           <div className="flex items-baseline gap-2 mb-1">
             <span className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
@@ -107,7 +106,6 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handle} className="space-y-3">
               {mode === 'signup' && (
                 <div className="animate-fade-up">
@@ -182,7 +180,6 @@ export default function AuthPage() {
               </button>
         </form>
 
-        {/* Toggle */}
         <p className="mt-6 text-xs text-center" style={{ color: 'var(--ink-4)' }}>
           {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
           <button

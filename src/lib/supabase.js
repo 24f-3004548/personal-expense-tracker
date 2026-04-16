@@ -10,7 +10,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 })
 
-// ─── Categories ───────────────────────────────────────────────
 export const DEFAULT_CATEGORIES = [
   { name: 'Food', icon: '🍜', color: '#f97316' },
   { name: 'Transport', icon: '🚌', color: '#3b82f6' },
@@ -25,7 +24,6 @@ export const DEFAULT_CATEGORIES = [
 export const getCategoryMeta = (name) =>
   DEFAULT_CATEGORIES.find((c) => c.name === name) || { name, icon: '📦', color: '#84cc16' }
 
-// ─── Expense helpers ───────────────────────────────────────────
 export const getExpenses = async (userId, month, year) => {
   const startDate = new Date(year, month, 1).toISOString().split('T')[0]
   const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
@@ -71,7 +69,6 @@ export const deleteExpense = async (id) => {
   if (error) throw error
 }
 
-// ─── Income helpers ────────────────────────────────────────────
 export const getIncome = async (userId, month, year) => {
   const startDate = new Date(year, month, 1).toISOString().split('T')[0]
   const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0]
@@ -155,7 +152,6 @@ export const getTransactionsInRange = async (userId, startDate, endDate) => {
   })
 }
 
-// ─── Budget helpers ────────────────────────────────────────────
 export const getBudget = async (userId, month, year) => {
   const { data, error } = await supabase
     .from('budgets')
@@ -183,7 +179,6 @@ export const upsertBudget = async (userId, month, year, amount) => {
   return data
 }
 
-// ─── Dashboard aggregation ────────────────────────────────────
 export const getDashboardData = async (userId, month, year) => {
   const [expenses, income, budget] = await Promise.all([
     getExpenses(userId, month, year),
@@ -195,7 +190,6 @@ export const getDashboardData = async (userId, month, year) => {
   const totalIncome = income.reduce((sum, i) => sum + Number(i.amount), 0)
   const savings = totalIncome - totalExpenses
 
-  // Category breakdown
   const categoryMap = {}
   expenses.forEach((e) => {
     if (!categoryMap[e.category]) categoryMap[e.category] = 0
@@ -217,7 +211,6 @@ export const getDashboardData = async (userId, month, year) => {
   }
 }
 
-// ─── 6-month trend ────────────────────────────────────────────
 export const getMonthlyTrend = async (userId) => {
   const months = []
   const now = new Date()
@@ -245,7 +238,6 @@ export const getMonthlyTrend = async (userId) => {
   return results
 }
 
-// ─── Format currency ──────────────────────────────────────────
 export const formatCurrency = (amount, currency = '₹') => {
   const num = Number(amount) || 0
   if (num >= 100000) return `${currency}${(num / 100000).toFixed(1)}L`

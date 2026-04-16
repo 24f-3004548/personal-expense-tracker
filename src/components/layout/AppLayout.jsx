@@ -19,12 +19,10 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--surface)' }}>
-      {/* Sidebar — desktop */}
       <aside
         className="hidden md:flex flex-col w-52 shrink-0 border-r h-screen sticky top-0"
         style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
       >
-        {/* Logo */}
         <div className="px-5 pt-6 pb-4">
           <div className="flex items-baseline gap-1.5">
             <span className="text-lg font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>spendly</span>
@@ -32,7 +30,6 @@ export default function AppLayout({ children }) {
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-3 space-y-0.5">
           {NAV.map((item) => (
             <NavLink
@@ -52,7 +49,6 @@ export default function AppLayout({ children }) {
           ))}
         </nav>
 
-        {/* User */}
         <div className="px-3 pb-5 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2.5 px-2.5 py-2">
             <div
@@ -74,7 +70,6 @@ export default function AppLayout({ children }) {
         </div>
       </aside>
 
-      {/* Mobile header */}
       <div
         className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center justify-between px-4 border-b"
         style={{
@@ -94,7 +89,6 @@ export default function AppLayout({ children }) {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {mobileOpen && (
         <div
           className="md:hidden fixed inset-0 z-30 animate-fade-in"
@@ -136,7 +130,6 @@ export default function AppLayout({ children }) {
         </div>
       )}
 
-      {/* Main content */}
       <main className="flex-1 min-w-0 pb-20 md:pb-0 pt-[calc(56px+env(safe-area-inset-top))] md:pt-0">
         {children}
       </main>

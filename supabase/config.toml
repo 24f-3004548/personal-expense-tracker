@@ -404,3 +404,6 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 # Functions config (no local cron scheduling here)
 [functions]
+
+[functions.resend-email]
+verify_jwt = false

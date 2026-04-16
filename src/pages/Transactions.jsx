@@ -125,7 +125,6 @@ export default function Transactions() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div className="flex items-center gap-2">
           <button onClick={prevMonth} className="text-sm" style={{ color: 'var(--ink-3)' }}>‹</button>
@@ -141,7 +140,6 @@ export default function Transactions() {
         </span>
       </div>
 
-      {/* Category filter */}
       <div className="flex gap-1.5 flex-wrap mb-4 animate-fade-up stagger-1">
         {['All', ...DEFAULT_CATEGORIES.map(c => c.name), 'Income'].map(cat => {
           const meta = cat !== 'All' ? getCategoryMeta(cat) : null
@@ -163,7 +161,6 @@ export default function Transactions() {
         })}
       </div>
 
-      {/* Transactions */}
       {loading ? (
         <div className="text-center py-12 text-sm" style={{ color: 'var(--ink-4)' }}>Loading...</div>
       ) : filtered.length === 0 ? (

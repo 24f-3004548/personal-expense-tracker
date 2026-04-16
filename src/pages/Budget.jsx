@@ -57,7 +57,6 @@ export default function Budget() {
         <p className="text-xs" style={{ color: 'var(--ink-4)' }}>{MONTH_NAMES[now.getMonth()]} {now.getFullYear()}</p>
       </div>
 
-      {/* Budget setter */}
       <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-1"
         style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
         <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Monthly budget</p>
@@ -90,7 +89,6 @@ export default function Budget() {
         </div>
       </div>
 
-      {/* Progress */}
       {budgetAmount > 0 && (
         <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-2"
           style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>

@@ -198,7 +198,6 @@ export default function Review() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6 animate-fade-up">
         <div className="flex items-center gap-2">
           <button onClick={prevMonth} className="text-sm" style={{ color: 'var(--ink-3)' }}>‹</button>
@@ -215,7 +214,6 @@ export default function Review() {
         <div className="text-center py-12 text-sm" style={{ color: 'var(--ink-4)' }}>Loading...</div>
       ) : (
         <>
-          {/* Summary cards */}
           <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-up stagger-1">
             {[
               { label: 'Total income', value: formatCurrencyFull(data?.totalIncome), color: 'var(--green)' },
@@ -233,7 +231,6 @@ export default function Review() {
             ))}
           </div>
 
-          {/* Insights */}
           {insights.length > 0 && (
             <div className="rounded-xl border p-4 mb-4 space-y-2 animate-fade-up stagger-2"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -249,7 +246,6 @@ export default function Review() {
             </div>
           )}
 
-          {/* Spending by category */}
           {spendByCategoryRows.length > 0 && (
             <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-3"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -293,7 +289,6 @@ export default function Review() {
             </div>
           )}
 
-          {/* vs last month */}
           {prevData && (
             <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-4"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -353,7 +348,6 @@ export default function Review() {
                     })}
                   </div>
 
-                  {/* Category comparison */}
                   {categoryShiftRows.length > 0 && (
                     <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
                       <p className="text-xs mb-3" style={{ color: 'var(--ink-4)' }}>Category shifts</p>
@@ -438,7 +432,6 @@ export default function Review() {
             </div>
           )}
 
-          {/* 6-month overview */}
           {trend.length > 0 && (
             <div className="rounded-xl border p-4 mb-4 animate-fade-up stagger-5"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
@@ -467,7 +460,6 @@ export default function Review() {
             </div>
           )}
 
-          {/* Largest expense */}
           {largestExpense && (
             <div className="rounded-xl border p-4 animate-fade-up stagger-6"
               style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>

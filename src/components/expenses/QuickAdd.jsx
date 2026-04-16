@@ -61,7 +61,6 @@ export default function QuickAdd({ onAdded }) {
         )}
       </div>
 
-      {/* Amount + Quick amounts */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2" style={{border: `1.5px solid ${focused ? 'var(--ink)' : 'var(--border)'}`, borderRadius: '10px', padding: '10px 12px', transition: 'border-color 0.15s ease',}}>
           <span className="text-lg font-mono" style={{ color: 'var(--ink)' }}>₹</span>
@@ -97,7 +96,6 @@ export default function QuickAdd({ onAdded }) {
         </div>
       </div>
 
-      {/* Categories */}
       <div className="mb-4">
         <p className="text-xs mb-2" style={{ color: 'var(--ink-4)' }}>Category</p>
         <div className="flex flex-wrap gap-1.5">
@@ -120,7 +118,6 @@ export default function QuickAdd({ onAdded }) {
         </div>
       </div>
 
-      {/* Note + Date */}
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <input
           type="text"
@@ -149,7 +146,6 @@ export default function QuickAdd({ onAdded }) {
         />
       </div>
 
-      {/* Submit */}
       <button
         onClick={() => submit()}
         disabled={loading || !amount}
