@@ -257,7 +257,7 @@ export default function Transactions() {
                 style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
                   style={{ background: item._type === 'income' ? 'var(--green-light)' : meta.color + '15' }}>
-                  {item._type === 'income' ? '💰' : <CategoryIcon name={item.category} className="w-3.5 h-3.5" />}
+                  <CategoryIcon name={item._type === 'income' ? 'Income' : item.category} className="w-3.5 h-3.5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate" style={{ color: 'var(--ink)' }}>
