@@ -91,7 +91,7 @@ export default function AddIncomeModal({ onClose, onAdded, month, year }) {
         <button
           onClick={submit}
           disabled={loading || !amount}
-          className="w-full mt-4 py-2.5 text-sm font-medium rounded-lg transition-all"
+          className={`w-full mt-4 py-2.5 text-sm font-medium rounded-lg transition-all ${loading ? 'font-mono' : ''}`}
           style={{
             background: amount && !loading ? 'var(--green)' : 'var(--surface-3)',
             color: amount && !loading ? 'white' : 'var(--ink-4)',

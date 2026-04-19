@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { DEFAULT_CATEGORIES, addExpense } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
 import DateInput from '../DateInput'
+import CategoryIcon from '../CategoryIcon'
 
 const QUICK_AMOUNTS = [50, 100, 200, 500]
 
@@ -111,7 +112,7 @@ export default function QuickAdd({ onAdded }) {
                 fontWeight: category === cat.name ? '500' : '400',
               }}
             >
-              <span>{cat.icon}</span>
+              <CategoryIcon name={cat.name} className="w-3.5 h-3.5" />
               {cat.name}
             </button>
           ))}
@@ -149,7 +150,7 @@ export default function QuickAdd({ onAdded }) {
       <button
         onClick={() => submit()}
         disabled={loading || !amount}
-        className="w-full py-2.5 text-sm font-medium rounded-lg transition-all"
+        className={`w-full py-2.5 text-sm font-medium rounded-lg transition-all ${loading ? 'font-mono' : ''}`}
         style={{
           background: amount && !loading ? 'var(--ink)' : 'var(--surface-3)',
           color: amount && !loading ? 'var(--surface)' : 'var(--ink-4)',

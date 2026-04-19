@@ -169,7 +169,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 text-sm font-medium rounded-lg transition-all mt-2"
+                className={`w-full py-2.5 text-sm font-medium rounded-lg transition-all mt-2 ${loading ? 'font-mono' : ''}`}
                 style={{
                   background: loading ? 'var(--surface-3)' : 'var(--ink)',
                   color: loading ? 'var(--ink-4)' : 'var(--surface)',

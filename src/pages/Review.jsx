@@ -6,6 +6,7 @@ import {
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts'
+import CategoryIcon from '../components/CategoryIcon'
 
 const now = new Date()
 
@@ -108,7 +109,7 @@ export default function Review() {
   }
   if (data?.categoryBreakdown?.[0]) {
     insights.push({
-      icon: getCategoryMeta(data.categoryBreakdown[0].name).icon,
+      iconName: data.categoryBreakdown[0].name,
       text: `${data.categoryBreakdown[0].name} is your highest category (${formatCurrencyFull(data.categoryBreakdown[0].amount)})`,
       positive: false,
     })
@@ -211,7 +212,7 @@ export default function Review() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-sm" style={{ color: 'var(--ink-4)' }}>Loading...</div>
+        <div className="text-center py-12 text-sm font-mono" style={{ color: 'var(--ink-4)' }}>loading...</div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-up stagger-1">
@@ -238,7 +239,7 @@ export default function Review() {
               {insights.map((ins, i) => (
                 <div key={i} className="flex items-start gap-2.5 py-1">
                   <span className="text-sm shrink-0" style={{ color: ins.positive ? 'var(--green)' : 'var(--ink-2)' }}>
-                    {ins.icon}
+                    {ins.iconName ? <CategoryIcon name={ins.iconName} className="w-3.5 h-3.5" /> : ins.icon}
                   </span>
                   <p className="text-sm" style={{ color: 'var(--ink-2)' }}>{ins.text}</p>
                 </div>
@@ -277,7 +278,10 @@ export default function Review() {
                     <div key={`review-row-${category.name}`} className="flex items-center justify-between gap-3 py-1.5 border-b last:border-0" style={{ borderColor: 'var(--border)' }}>
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: category.color }} />
-                        <span className="text-xs truncate" style={{ color: 'var(--ink-2)' }}>{category.icon} {category.name}</span>
+                        <span className="text-xs truncate inline-flex items-center gap-1.5" style={{ color: 'var(--ink-2)' }}>
+                          <CategoryIcon name={category.name} className="w-3.5 h-3.5" />
+                          {category.name}
+                        </span>
                       </div>
                       <span className="text-xs font-mono shrink-0" style={{ color: 'var(--ink-3)' }}>
                         {formatCurrencyFull(category.amount)} · {percent}%
@@ -396,7 +400,6 @@ export default function Review() {
                       </div>
 
                       {categoryShiftRows.map((row) => {
-                        const meta = getCategoryMeta(row.name)
                         const deltaColor = row.delta > 0 ? 'var(--red)' : row.delta < 0 ? 'var(--green)' : 'var(--ink-4)'
                         const currentPct = data.totalExpenses > 0 ? Math.round((row.currentAmount / data.totalExpenses) * 100) : 0
 
@@ -404,7 +407,7 @@ export default function Review() {
                           <div key={row.name} className="py-2.5">
                             <div className="flex items-center justify-between mb-1.5">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm">{meta.icon}</span>
+                                <CategoryIcon name={row.name} className="w-3.5 h-3.5" />
                                 <span className="text-xs" style={{ color: 'var(--ink-2)' }}>{row.name}</span>
                               </div>
                               <div className="flex items-baseline gap-2">
@@ -467,7 +470,7 @@ export default function Review() {
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center"
                   style={{ background: getCategoryMeta(largestExpense.category).color + '15' }}>
-                  {getCategoryMeta(largestExpense.category).icon}
+                  <CategoryIcon name={largestExpense.category} className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm" style={{ color: 'var(--ink)' }}>

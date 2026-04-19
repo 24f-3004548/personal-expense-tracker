@@ -14,7 +14,7 @@ function ProtectedRoutes() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafaf8' }}>
-        <div style={{ fontSize: '14px', fontFamily: 'monospace', color: '#9a9a9a' }}>loading...</div>
+        <div className="font-mono" style={{ fontSize: '14px', color: '#9a9a9a' }}>loading...</div>
       </div>
     )
   }

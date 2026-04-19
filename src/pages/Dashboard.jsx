@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import QuickAdd from '../components/expenses/QuickAdd'
 import AddIncomeModal from '../components/income/AddIncomeModal'
+import CategoryIcon from '../components/CategoryIcon'
 
 const now = new Date()
 
@@ -66,11 +67,13 @@ export default function Dashboard() {
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null
     const { name, amount } = payload[0].payload
-    const meta = getCategoryMeta(name)
     return (
       <div className="px-3 py-2 rounded-lg shadow-sm border text-xs"
         style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-        <span>{meta.icon} {name}</span>
+        <span className="inline-flex items-center gap-1">
+          <CategoryIcon name={name} className="w-3.5 h-3.5" />
+          {name}
+        </span>
         <span className="ml-2 font-mono font-medium">{formatCurrencyFull(amount)}</span>
       </div>
     )
@@ -79,7 +82,7 @@ export default function Dashboard() {
   if (loading && !data) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-sm" style={{ color: 'var(--ink-4)' }}>Loading...</div>
+        <div className="text-sm font-mono" style={{ color: 'var(--ink-4)' }}>loading...</div>
       </div>
     )
   }
@@ -285,7 +288,7 @@ export default function Dashboard() {
           <div>
             {recentTransactions.map((item) => {
               const meta = item._type === 'income'
-                ? { icon: '💰', color: 'var(--green)' }
+                ? { color: 'var(--green)' }
                 : getCategoryMeta(item.category)
               return (
                 <div key={`${item._type}-${item.id}`}
@@ -295,7 +298,7 @@ export default function Dashboard() {
                     className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
                     style={{ background: item._type === 'income' ? 'var(--green-light)' : meta.color + '15' }}
                   >
-                    {meta.icon}
+                    {item._type === 'income' ? '💰' : <CategoryIcon name={item.category} className="w-3.5 h-3.5" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate" style={{ color: 'var(--ink)' }}>

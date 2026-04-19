@@ -5,6 +5,7 @@ import {
   getExpenses, getIncome, deleteExpense, updateExpense, deleteIncome, updateIncome,
   DEFAULT_CATEGORIES, getCategoryMeta, formatCurrencyFull, formatDate, formatTime, MONTH_NAMES
 } from '../lib/supabase'
+import CategoryIcon from '../components/CategoryIcon'
 
 const now = new Date()
 
@@ -154,7 +155,7 @@ export default function Transactions() {
                 borderColor: filter === cat ? (meta ? meta.color + '40' : 'var(--ink)') : 'var(--border)',
               }}
             >
-              {meta && <span>{meta.icon}</span>}
+              {meta && <CategoryIcon name={cat} className="w-3.5 h-3.5" />}
               {cat}
             </button>
           )
@@ -162,7 +163,7 @@ export default function Transactions() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-sm" style={{ color: 'var(--ink-4)' }}>Loading...</div>
+        <div className="text-center py-12 text-sm font-mono" style={{ color: 'var(--ink-4)' }}>loading...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-sm" style={{ color: 'var(--ink-4)' }}>No transactions found</p>
@@ -175,7 +176,7 @@ export default function Transactions() {
               <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
                 {grouped[date].map(item => {
             const meta = item._type === 'income'
-              ? { icon: '💰', color: 'var(--green)' }
+              ? { color: 'var(--green)' }
               : getCategoryMeta(item.category)
             const isEdit = editing === `${item._type}-${item.id}`
 
@@ -229,7 +230,7 @@ export default function Transactions() {
                               borderColor: editForm.category === cat.name ? 'var(--ink)' : 'var(--border-strong)',
                             }}
                           >
-                            {cat.icon} {cat.name}
+                            <CategoryIcon name={cat.name} className="w-3.5 h-3.5" /> {cat.name}
                           </button>
                         ))}
                       </div>
@@ -256,7 +257,7 @@ export default function Transactions() {
                 style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
                   style={{ background: item._type === 'income' ? 'var(--green-light)' : meta.color + '15' }}>
-                  {meta.icon}
+                  {item._type === 'income' ? '💰' : <CategoryIcon name={item.category} className="w-3.5 h-3.5" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm truncate" style={{ color: 'var(--ink)' }}>

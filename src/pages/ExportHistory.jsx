@@ -436,7 +436,7 @@ export default function ExportHistory() {
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-sm" style={{ color: 'var(--ink-4)' }}>Loading transactions...</div>
+          <div className="py-8 text-center text-sm font-mono" style={{ color: 'var(--ink-4)' }}>loading transactions...</div>
         ) : loadError ? (
           <div className="rounded-xl border p-3 text-sm" style={{ borderColor: 'var(--red)', background: 'var(--red-light)', color: 'var(--red)' }}>{loadError}</div>
         ) : transactions.length === 0 ? (
