@@ -50,6 +50,7 @@ export default function DateInput({
   onChange,
   min,
   max,
+  containerClassName = '',
   className = '',
   style,
   id,
@@ -89,7 +90,7 @@ export default function DateInput({
   }
 
   return (
-    <div className="relative">
+    <div className={`relative ${containerClassName}`}>
       <input
         id={id}
         name={name}
@@ -107,7 +108,7 @@ export default function DateInput({
         }}
         disabled={disabled}
         aria-label={ariaLabel}
-        className={`${className} pr-11`}
+        className={`${className} pr-14 leading-normal`}
         style={style}
       />
 
@@ -117,7 +118,7 @@ export default function DateInput({
           aria-label="Open date picker"
           onClick={openNativePicker}
           disabled={disabled}
-          className="relative h-7 w-7 rounded-md border"
+          className="relative h-6 w-6 rounded-md border"
           style={{
             borderColor: 'var(--border)',
             background: 'var(--surface-2)',

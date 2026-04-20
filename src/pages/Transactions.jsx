@@ -6,6 +6,7 @@ import {
   DEFAULT_CATEGORIES, getCategoryMeta, formatCurrencyFull, formatDate, formatTime, MONTH_NAMES
 } from '../lib/supabase'
 import CategoryIcon from '../components/CategoryIcon'
+import { evaluateAmountExpression, formatAmountForInput } from '../lib/amountExpression'
 
 const now = new Date()
 
@@ -67,7 +68,7 @@ export default function Transactions() {
   }
 
   const saveEdit = async (item) => {
-    const amount = Number(editForm.amount)
+    const amount = evaluateAmountExpression(editForm.amount)
     if (!amount || amount <= 0 || !editForm.date) {
       alert('Enter a valid amount and date.')
       return
@@ -187,9 +188,15 @@ export default function Transactions() {
                     <div>
                       <label className="text-xs block mb-1" style={{ color: 'var(--ink-4)' }}>Amount</label>
                       <input
-                        type="number"
+                        type="text"
                         value={editForm.amount}
                         onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}
+                        onBlur={() => {
+                          const parsed = evaluateAmountExpression(editForm.amount)
+                          if (parsed !== null) {
+                            setEditForm(f => ({ ...f, amount: formatAmountForInput(parsed) }))
+                          }
+                        }}
                         className="w-full px-2.5 py-2 text-sm rounded-lg border outline-none"
                         style={{ background: 'var(--surface)', borderColor: 'var(--border)', color: 'var(--ink)' }}
                       />
